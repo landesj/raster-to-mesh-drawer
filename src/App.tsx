@@ -1,4 +1,3 @@
-import { RecoilRoot } from "recoil";
 import "./App.css";
 import { RasterPage } from "./pages/raster/RasterPage";
 import styled from "styled-components";
@@ -12,12 +11,10 @@ const AppPage = styled.div`
 
 function App() {
   return (
-    <RecoilRoot>
-      <AppPage>
-        <RasterPage />
-        <MeshPage />
-      </AppPage>
-    </RecoilRoot>
+    <AppPage>
+      <RasterPage />
+      <MeshPage />
+    </AppPage>
   );
 }
 
