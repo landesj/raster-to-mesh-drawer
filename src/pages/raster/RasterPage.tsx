@@ -1,10 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import styled from "styled-components";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "react-leaflet";
-import GeoRasterLayer from "georaster-layer-for-leaflet";
 import parseGeoraster from "georaster";
+import GeoRasterLayer from "georaster-layer-for-leaflet";
 
 const Page = styled.div`
   display: flex;
