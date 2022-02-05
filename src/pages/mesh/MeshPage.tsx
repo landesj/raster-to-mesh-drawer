@@ -6,16 +6,17 @@ type point = { x: number; y: number };
 
 function Point({ x, y }: point) {
   return (
-    <div
+    <span
       style={{
-        backgroundColor: "blue",
-        position: "fixed",
-        left: x,
-        top: y,
-        width: "10px",
         height: "10px",
+        width: "10px",
+        backgroundColor: "#AFEEEE",
+        borderRadius: "50%",
+        left: x - 5,
+        top: y - 5,
+        position: "fixed",
       }}
-    ></div>
+    ></span>
   );
 }
 
@@ -25,12 +26,15 @@ export function MeshPage() {
 
   const setPointsDebounced = debounce(setPoints, 100);
 
-  const addPoint = useCallback((event) => {
-    if (drawing) {
-      const newPoints = [...points, { x: event.clientX, y: event.clientY }]
-      setPointsDebounced(newPoints);
-    }
-  }, [points, drawing])
+  const addPoint = useCallback(
+    (event) => {
+      if (drawing) {
+        const newPoints = [...points, { x: event.clientX, y: event.clientY }];
+        setPointsDebounced(newPoints);
+      }
+    },
+    [points, drawing]
+  );
 
   const onClick = () => {
     setDrawing(!drawing);
