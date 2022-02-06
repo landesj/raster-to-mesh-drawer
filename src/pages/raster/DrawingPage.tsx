@@ -1,14 +1,11 @@
 import { debounce } from "lodash";
 import { useCallback, useState } from "react";
 import { Line, LineType } from "../../assets/Line";
-import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
-  Point,
-  PointType,
-} from "../../assets/Point";
+import { Point, PointType } from "../../assets/Point";
 
-export function DrawingCanvas() {
+type Props = { height: string; width: string };
+
+export function DrawingCanvas(props: Props) {
   const [points, setPoints] = useState<PointType[]>([]);
   const [lines, setLines] = useState<LineType[]>([]);
   const [latestPoint, setLatestPoint] = useState<PointType | undefined>();
@@ -22,7 +19,6 @@ export function DrawingCanvas() {
       const divTarget = event.currentTarget.getBoundingClientRect();
       const newPoint = {
         x: event.clientX - divTarget.left,
-
         y: event.clientY - divTarget.top,
       };
       const newPoints = [...points, newPoint];
@@ -48,17 +44,20 @@ export function DrawingCanvas() {
       setLatestPointDebounced,
     ]
   );
-  const drawnPoints = points.map((point: PointType) => Point(point));
-  const drawnLines = lines.map((line: LineType) => Line(line));
+  const drawnPoints = points.map((point: PointType) =>
+    Point({ height: props.height, width: props.width, point: point })
+  );
+  const drawnLines = lines.map((line: LineType) =>
+    Line({ height: props.height, width: props.width, line: line })
+  );
   return (
     <div
       id="drawingPad"
       style={{
-        offset: "50px",
-        height: CANVAS_HEIGHT,
-        width: CANVAS_WIDTH,
+        height: props.height,
+        width: props.width,
         backgroundColor: "#F0F8FF",
-        opacity: 0.7,
+        opacity: 0.4,
         position: "absolute",
         zIndex: 10000,
       }}

@@ -1,5 +1,3 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./Point";
-
 export type LineType = {
   xSrc: number;
   ySrc: number;
@@ -7,11 +5,14 @@ export type LineType = {
   yDst: number;
 };
 
-export function Line({ xSrc, ySrc, xDst, yDst }: LineType) {
+type Props = { height: string; width: string; line: LineType };
+
+export function Line(props: Props) {
+  const { xSrc, ySrc, xDst, yDst } = props.line;
   return (
     <svg
-      height={CANVAS_HEIGHT}
-      width={CANVAS_WIDTH}
+      height={props.height}
+      width={props.width}
       xmlns="http://www.w3.org/2000/svg"
       style={{ position: "fixed", zIndex: 1 }}
     >
