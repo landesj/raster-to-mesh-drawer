@@ -5,13 +5,16 @@ import { useCallback } from "react";
 type PointType = { x: number; y: number };
 type LineType = { xSrc: number; ySrc: number; xDst: number; yDst: number };
 
+const CANVAS_HEIGHT = "500px"
+const CANVAS_WIDTH = "500px"
+
 function Line({ xSrc, ySrc, xDst, yDst }: LineType) {
   return (
     <svg
-      height="500"
-      width="500"
+      height={CANVAS_HEIGHT}
+      width={CANVAS_WIDTH}
       xmlns="http://www.w3.org/2000/svg"
-      style={{ position: "fixed" }}
+      style={{ position: "fixed", zIndex: 1 }}
     >
       <line
         x1={xSrc}
@@ -19,28 +22,23 @@ function Line({ xSrc, ySrc, xDst, yDst }: LineType) {
         x2={xDst}
         y2={yDst}
         stroke="black"
-        strokeWidth={3}
-        style={{ position: "fixed", zIndex: 2 }}
+        strokeWidth="3"
       />
     </svg>
   );
 }
 
-function Point({ x, y }: PointType) {
+function PointSVG( {x, y}: PointType) {
   return (
-    <span
-      style={{
-        height: "10px",
-        width: "10px",
-        backgroundColor: "#AFEEEE",
-        borderRadius: "50%",
-        left: x - 5,
-        top: y - 5,
-        position: "fixed",
-        zIndex: 1,
-      }}
-    ></span>
-  );
+    <svg
+      height={CANVAS_HEIGHT}
+      width={CANVAS_WIDTH}
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ position: "fixed", zIndex: 2 }}
+    >
+      <circle cx={x} cy={y} r="4" stroke="#AFEEEE" fill="#AFEEEE"></circle>
+    </svg>
+  )
 }
 
 export function MeshPage() {
@@ -48,7 +46,7 @@ export function MeshPage() {
   const [points, setPoints] = useState<PointType[]>([]);
   const [lines, setLines] = useState<LineType[]>([]);
   const [latestPoint, setLatestPoint] = useState<PointType | undefined>();
-
+  
   const setPointsDebounced = debounce(setPoints, 100);
   const setLinesDebounced = debounce(setLines, 100);
   const setLatestPointDebounced = debounce(setLatestPoint, 100);
@@ -57,11 +55,11 @@ export function MeshPage() {
     (event) => {
       if (drawing) {
         const divTarget = event.currentTarget.getBoundingClientRect();
-        const newPoints = [...points, { x: event.clientX, y: event.clientY }];
         const newPoint = {
           x: event.clientX - divTarget.left,
           y: event.clientY - divTarget.top,
         };
+        const newPoints = [...points, newPoint];
         setPointsDebounced(newPoints);
         if (latestPoint) {
           const newLine = {
@@ -76,22 +74,22 @@ export function MeshPage() {
         setLatestPointDebounced(newPoint);
       }
     },
-    [points, drawing, latestPoint]
+    [points, drawing, latestPoint, lines, setLinesDebounced, setPointsDebounced, setLatestPointDebounced]
   );
 
-  const onClick = () => {
+  const resetDrawing = () => {
     setDrawing(!drawing);
   };
   const buttonText = drawing ? "Stop Drawing" : "Start Drawing";
-  const drawnPoints = points.map((point: PointType) => Point(point));
+  const drawnPoints = points.map((point: PointType) => PointSVG(point));
   const drawnLines = lines.map((line: LineType) => Line(line));
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <h2>This is the Mesh page.</h2>
-      <button onClick={onClick}>{buttonText}</button>
+      <button onClick={resetDrawing}>{buttonText}</button>
       <div
         id="drawingPad"
-        style={{ width: "500px", height: "500px", backgroundColor: "gray" }}
+        style={{ height: CANVAS_HEIGHT, width: CANVAS_WIDTH, backgroundColor: "gray" }}
         onClick={addPoint}
       >
         {drawnPoints}
