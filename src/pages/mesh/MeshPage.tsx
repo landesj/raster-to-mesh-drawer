@@ -1,45 +1,8 @@
 import { useState } from "react";
 import { debounce } from "lodash";
 import { useCallback } from "react";
-
-type PointType = { x: number; y: number };
-type LineType = { xSrc: number; ySrc: number; xDst: number; yDst: number };
-
-const CANVAS_HEIGHT = "500px"
-const CANVAS_WIDTH = "500px"
-
-function Line({ xSrc, ySrc, xDst, yDst }: LineType) {
-  return (
-    <svg
-      height={CANVAS_HEIGHT}
-      width={CANVAS_WIDTH}
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ position: "fixed", zIndex: 1 }}
-    >
-      <line
-        x1={xSrc}
-        y1={ySrc}
-        x2={xDst}
-        y2={yDst}
-        stroke="black"
-        strokeWidth="3"
-      />
-    </svg>
-  );
-}
-
-function PointSVG( {x, y}: PointType) {
-  return (
-    <svg
-      height={CANVAS_HEIGHT}
-      width={CANVAS_WIDTH}
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ position: "fixed", zIndex: 2 }}
-    >
-      <circle cx={x} cy={y} r="4" stroke="#AFEEEE" fill="#AFEEEE"></circle>
-    </svg>
-  )
-}
+import { CANVAS_HEIGHT, CANVAS_WIDTH, Point, PointType } from "../../assets/Point";
+import { Line, LineType } from "../../assets/Line";
 
 export function MeshPage() {
   const [drawing, setDrawing] = useState<boolean>(false);
@@ -81,7 +44,7 @@ export function MeshPage() {
     setDrawing(!drawing);
   };
   const buttonText = drawing ? "Stop Drawing" : "Start Drawing";
-  const drawnPoints = points.map((point: PointType) => PointSVG(point));
+  const drawnPoints = points.map((point: PointType) => Point(point));
   const drawnLines = lines.map((line: LineType) => Line(line));
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
