@@ -43,6 +43,7 @@ export function RasterPage() {
       };
     }
   };
+
   return (
     <Page>
       <h2>This is the Raster page.</h2>
