@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { useMap } from "react-leaflet";
 import parseGeoraster from "georaster";
 import GeoRasterLayer from "georaster-layer-for-leaflet";
+import { DrawingCanvas } from "./DrawingPage";
 
 const Page = styled.div`
   display: flex;
@@ -51,6 +52,7 @@ export function RasterPage() {
         onChange={(event) => onChange(event.target.files)}
       />
       <div style={{ padding: "10px" }}>
+        <DrawingCanvas />
         <MapContainer
           center={[51.505, -0.09]}
           zoom={13}

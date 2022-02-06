@@ -11,7 +11,7 @@ export function Point( {x, y}: PointType) {
       xmlns="http://www.w3.org/2000/svg"
       style={{ position: "fixed", zIndex: 2 }}
     >
-      <circle cx={x} cy={y} r="4" stroke="#AFEEEE" fill="#AFEEEE"></circle>
+      <circle cx={x} cy={y} r="4" stroke="#0000FF" fill="#0000FF"></circle>
     </svg>
   )
 }
