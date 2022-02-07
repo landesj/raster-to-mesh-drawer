@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, useMapEvent } from "react-leaflet";
 import styled from "styled-components";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "react-leaflet";
@@ -53,6 +53,10 @@ export function RasterPage() {
   };
 
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
+  const bounds = [
+    [51.49, -0.08],
+    [51.5, -0.06],
+  ];
   return (
     <Page>
       <h2>This is the Raster page.</h2>
@@ -65,9 +69,6 @@ export function RasterPage() {
         {drawingButtonText}
       </button>
       <div style={{ padding: "10px" }}>
-        {isDrawing && (
-          <DrawingCanvas height={CANVAS_HEIGHT} width={CANVAS_WIDTH} />
-        )}
         <MapContainer
           center={[51.505, -0.09]}
           zoom={13}
@@ -81,6 +82,9 @@ export function RasterPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             maxZoom={30}
           />
+          {isDrawing && (
+            <DrawingCanvas height={CANVAS_HEIGHT} width={CANVAS_WIDTH} />
+          )}
           <RasterImport rasterArrayBuffer={rasterState} />
         </MapContainer>
       </div>

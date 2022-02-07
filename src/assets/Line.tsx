@@ -1,3 +1,5 @@
+import { SVGOverlay, useMap } from "react-leaflet";
+
 export type LineType = {
   xSrc: number;
   ySrc: number;
@@ -8,14 +10,10 @@ export type LineType = {
 type Props = { height: string; width: string; line: LineType };
 
 export function Line(props: Props) {
+  const leafletMap = useMap();
   const { xSrc, ySrc, xDst, yDst } = props.line;
   return (
-    <svg
-      height={props.height}
-      width={props.width}
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ position: "fixed", zIndex: 1 }}
-    >
+    <SVGOverlay bounds={leafletMap.getBounds()}>
       <line
         x1={xSrc}
         y1={ySrc}
@@ -24,6 +22,6 @@ export function Line(props: Props) {
         stroke="black"
         strokeWidth="3"
       />
-    </svg>
+    </SVGOverlay>
   );
 }
