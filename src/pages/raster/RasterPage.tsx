@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import styled from "styled-components";
 import "leaflet/dist/leaflet.css";
-import { useMap } from "react-leaflet";
-import parseGeoraster from "georaster";
-import GeoRasterLayer from "georaster-layer-for-leaflet";
 import { DrawingCanvas } from "./DrawingPage";
-import { fetchOSMBuildings, Polygon } from "../../fetch/fetchOsm";
+import { fetchOSMBuildings, BuildingPolygon } from "../../fetch/fetchOsm";
 import { LatLngBounds } from "leaflet";
-import { debounce } from "lodash";
+import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 
 const CANVAS_HEIGHT = "700px";
 const CANVAS_WIDTH = "700px";
@@ -18,42 +15,11 @@ const Page = styled.div`
   flex-direction: column;
 `;
 
-type ImportProps = { rasterArrayBuffer: ArrayBuffer | null };
-type SetBoundsProps = {
-  setBounds: React.Dispatch<React.SetStateAction<LatLngBounds | undefined>>;
-};
-
-function SetMapBounds({ setBounds }: SetBoundsProps) {
-  const setBoundsDebounced = debounce(setBounds, 100);
-  const leafletMap = useMap();
-  const onMove = useCallback(() => {
-    setBoundsDebounced(leafletMap.getBounds());
-  }, [leafletMap]);
-
-  useEffect(() => {
-    leafletMap.on("move", onMove);
-  }, [leafletMap, onMove]);
-  return <></>;
-}
-
-function RasterImport(props: ImportProps) {
-  const leafletMap = useMap();
-
-  if (!props.rasterArrayBuffer) return <></>;
-
-  parseGeoraster(props.rasterArrayBuffer).then((georaster: any) => {
-    const geoTiff = new GeoRasterLayer({ georaster: georaster });
-    leafletMap.addLayer(geoTiff);
-    leafletMap.fitBounds(geoTiff.getBounds());
-  });
-  return <></>;
-}
-
 export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
   const [mapBounds, setMapBounds] = useState<LatLngBounds>();
-  const [osmBuildings, setOsmBuildings] = useState<Polygon[]>([]);
+  const [osmBuildings, setOsmBuildings] = useState<BuildingPolygon[]>([]);
 
   const onChange = (files: FileList | null) => {
     if (files !== null) {
@@ -115,6 +81,9 @@ export function RasterPage() {
           )}
           <RasterImport rasterArrayBuffer={rasterState} />
           <SetMapBounds setBounds={setMapBounds} />
+          {osmBuildings.length !== 0 && (
+            <OsmBuildings buildings={osmBuildings} />
+          )}
         </MapContainer>
       </div>
     </Page>
