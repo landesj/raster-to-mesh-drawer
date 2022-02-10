@@ -1,5 +1,5 @@
 import { debounce } from "lodash";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useMapEvent } from "react-leaflet";
 import { Line, LineType } from "../../assets/Line";
 import { Point, PointType } from "../../assets/Point";

@@ -2,7 +2,7 @@ import { LatLngBounds } from "leaflet";
 
 type Point = [number, number];
 
-export type Polygon = Point[];
+export type BuildingPolygon = Point[];
 
 type BuildingNode = {
   type: "node";
@@ -30,7 +30,7 @@ function getBuildingGeometry(
   element: BuildingElement,
   nodeIdToLatLon: Map<number, [number, number]>
 ) {
-  let geometry: Polygon = [];
+  let geometry: BuildingPolygon = [];
   if (element.type === "way") {
     element.nodes.forEach((value) => {
       const latLon = nodeIdToLatLon.get(value);
@@ -74,7 +74,7 @@ async function getRequestUrlFromBBox(bounds: LatLngBounds) {
 
 export async function fetchOSMBuildings(
   bounds: LatLngBounds,
-  setOsmBuildings: React.Dispatch<React.SetStateAction<Polygon[]>>
+  setOsmBuildings: React.Dispatch<React.SetStateAction<BuildingPolygon[]>>
 ) {
   const buildingGeometries = await getRequestUrlFromBBox(bounds);
   setOsmBuildings(buildingGeometries);
