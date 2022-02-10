@@ -1,11 +1,14 @@
-import { useState } from "react";
-import { MapContainer, TileLayer, useMapEvent } from "react-leaflet";
+import { useCallback, useEffect, useState } from "react";
+import { MapContainer, TileLayer } from "react-leaflet";
 import styled from "styled-components";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "react-leaflet";
 import parseGeoraster from "georaster";
 import GeoRasterLayer from "georaster-layer-for-leaflet";
 import { DrawingCanvas } from "./DrawingPage";
+import { fetchOSMBuildings, Polygon } from "../../fetch/fetchOsm";
+import { LatLngBounds } from "leaflet";
+import { debounce } from "lodash";
 
 const CANVAS_HEIGHT = "700px";
 const CANVAS_WIDTH = "700px";
@@ -15,9 +18,25 @@ const Page = styled.div`
   flex-direction: column;
 `;
 
-type Props = { rasterArrayBuffer: ArrayBuffer | null };
+type ImportProps = { rasterArrayBuffer: ArrayBuffer | null };
+type SetBoundsProps = {
+  setBounds: React.Dispatch<React.SetStateAction<LatLngBounds | undefined>>;
+};
 
-function RasterImport(props: Props) {
+function SetMapBounds({ setBounds }: SetBoundsProps) {
+  const setBoundsDebounced = debounce(setBounds, 100);
+  const leafletMap = useMap();
+  const onMove = useCallback(() => {
+    setBoundsDebounced(leafletMap.getBounds());
+  }, [leafletMap]);
+
+  useEffect(() => {
+    leafletMap.on("move", onMove);
+  }, [leafletMap, onMove]);
+  return <></>;
+}
+
+function RasterImport(props: ImportProps) {
   const leafletMap = useMap();
 
   if (!props.rasterArrayBuffer) return <></>;
@@ -33,6 +52,8 @@ function RasterImport(props: Props) {
 export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
+  const [mapBounds, setMapBounds] = useState<LatLngBounds>();
+  const [osmBuildings, setOsmBuildings] = useState<Polygon[]>([]);
 
   const onChange = (files: FileList | null) => {
     if (files !== null) {
@@ -52,11 +73,15 @@ export function RasterPage() {
     setIsDrawing(!isDrawing);
   };
 
+  const orderOSMBuildings = useCallback(() => {
+    if (mapBounds === undefined) {
+      alert("Map bounds not set, cannot order OSM");
+      return;
+    }
+    fetchOSMBuildings(mapBounds, setOsmBuildings);
+  }, [mapBounds, setOsmBuildings]);
+
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
-  const bounds = [
-    [51.49, -0.08],
-    [51.5, -0.06],
-  ];
   return (
     <Page>
       <h2>This is the Raster page.</h2>
@@ -67,6 +92,9 @@ export function RasterPage() {
       />
       <button style={{ width: "150px" }} onClick={changeIsDrawing}>
         {drawingButtonText}
+      </button>
+      <button style={{ width: "150px" }} onClick={orderOSMBuildings}>
+        Order OSM Buildings
       </button>
       <div style={{ padding: "10px" }}>
         <MapContainer
@@ -86,6 +114,7 @@ export function RasterPage() {
             <DrawingCanvas height={CANVAS_HEIGHT} width={CANVAS_WIDTH} />
           )}
           <RasterImport rasterArrayBuffer={rasterState} />
+          <SetMapBounds setBounds={setMapBounds} />
         </MapContainer>
       </div>
     </Page>
