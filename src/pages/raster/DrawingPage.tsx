@@ -17,17 +17,17 @@ export function DrawingCanvas(props: Props) {
 
   useMapEvent("click", (event) => {
     const newPoint = {
-      x: event.containerPoint.x,
-      y: event.containerPoint.y,
+      lat: event.latlng.lat,
+      lng: event.latlng.lng,
     };
     const newPoints = [...points, newPoint];
     setPointsDebounced(newPoints);
     if (latestPoint) {
       const newLine = {
-        xSrc: latestPoint.x,
-        ySrc: latestPoint.y,
-        xDst: newPoint.x,
-        yDst: newPoint.y,
+        latSrc: latestPoint.lat,
+        lngSrc: latestPoint.lng,
+        latDst: newPoint.lat,
+        lngDst: newPoint.lng,
       };
       const newLines = [...lines, newLine];
       setLinesDebounced(newLines);
