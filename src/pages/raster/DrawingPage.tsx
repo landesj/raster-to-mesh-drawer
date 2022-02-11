@@ -16,7 +16,6 @@ export function DrawingCanvas(props: Props) {
   const setLatestPointDebounced = debounce(setLatestPoint, 100);
 
   useMapEvent("click", (event) => {
-    console.log(event);
     const newPoint = {
       x: event.containerPoint.x,
       y: event.containerPoint.y,
@@ -41,7 +40,6 @@ export function DrawingCanvas(props: Props) {
   const drawnLines = lines.map((line: LineType) =>
     Line({ height: props.height, width: props.width, line: line })
   );
-  console.log(drawnPoints);
   return (
     <>
       {drawnPoints}
