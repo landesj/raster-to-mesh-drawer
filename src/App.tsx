@@ -1,7 +1,7 @@
 import "./App.css";
 import { RasterPage } from "./pages/raster/RasterPage";
 import styled from "styled-components";
-import { MeshPage } from "./pages/mesh/MeshPage";
+import MeshPage from "./pages/mesh/MeshPage";
 
 const AppPage = styled.div`
   display: flex;

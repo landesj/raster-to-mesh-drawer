@@ -13,6 +13,7 @@ const CANVAS_WIDTH = "700px";
 const Page = styled.div`
   display: flex;
   flex-direction: column;
+  width: 50%;
 `;
 
 export function RasterPage() {
