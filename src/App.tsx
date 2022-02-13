@@ -2,6 +2,7 @@ import "./App.css";
 import { RasterPage } from "./pages/raster/RasterPage";
 import styled from "styled-components";
 import MeshPage from "./pages/mesh/MeshPage";
+import { RecoilRoot } from "recoil";
 
 const AppPage = styled.div`
   display: flex;
@@ -11,10 +12,12 @@ const AppPage = styled.div`
 
 function App() {
   return (
-    <AppPage>
-      <RasterPage />
-      <MeshPage />
-    </AppPage>
+    <RecoilRoot>
+      <AppPage>
+        <RasterPage />
+        <MeshPage />
+      </AppPage>
+    </RecoilRoot>
   );
 }
 

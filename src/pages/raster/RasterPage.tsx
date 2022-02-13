@@ -2,10 +2,12 @@ import { useCallback, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./DrawingPage";
-import { fetchOSMBuildings, BuildingPolygon } from "../../fetch/fetchOsm";
+import { fetchOSMBuildings } from "../../fetch/fetchOsm";
 import { LatLngBounds } from "leaflet";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 import { Button, Input, Label, Page } from "./style";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { OsmBoundsState, OsmBuildingsState } from "./state";
 
 export const CANVAS_HEIGHT = "800px";
 
@@ -13,7 +15,8 @@ export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
   const [mapBounds, setMapBounds] = useState<LatLngBounds>();
-  const [osmBuildings, setOsmBuildings] = useState<BuildingPolygon[]>([]);
+  const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
+  const setOsmBounds = useSetRecoilState(OsmBoundsState);
 
   const onChange = (files: FileList | null) => {
     if (files !== null) {
@@ -39,6 +42,8 @@ export function RasterPage() {
       return;
     }
     fetchOSMBuildings(mapBounds, setOsmBuildings);
+    // Unsure if this will run if above function was unsuccessful?
+    setOsmBounds(mapBounds);
   }, [mapBounds, setOsmBuildings]);
 
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
