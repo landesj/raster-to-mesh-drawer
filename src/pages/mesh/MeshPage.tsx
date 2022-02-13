@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { CANVAS_HEIGHT } from "../raster/RasterPage";
 
 export const canvasSize = 1000;
 
@@ -32,7 +33,7 @@ function MeshPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "50%" }}>
       <h2>This is the Mesh Page.</h2>
-      <canvas ref={ref} style={{ width: "100%", height: "100%" }} />
+      <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
     </div>
   );
 }

@@ -4,9 +4,7 @@ import { useMapEvent } from "react-leaflet";
 import { Line, LineType } from "../../assets/Line";
 import { Point, PointType } from "../../assets/Point";
 
-type Props = { height: string; width: string };
-
-export function DrawingCanvas(props: Props) {
+export function DrawingCanvas() {
   const [points, setPoints] = useState<PointType[]>([]);
   const [lines, setLines] = useState<LineType[]>([]);
   const [latestPoint, setLatestPoint] = useState<PointType | undefined>();
@@ -34,12 +32,8 @@ export function DrawingCanvas(props: Props) {
     }
     setLatestPointDebounced(newPoint);
   });
-  const drawnPoints = points.map((point: PointType) =>
-    Point({ height: props.height, width: props.width, point: point })
-  );
-  const drawnLines = lines.map((line: LineType) =>
-    Line({ height: props.height, width: props.width, line: line })
-  );
+  const drawnPoints = points.map((point: PointType) => Point({ point: point }));
+  const drawnLines = lines.map((line: LineType) => Line({ line: line }));
   return (
     <>
       {drawnPoints}

@@ -7,7 +7,7 @@ export type LineType = {
   lngDst: number;
 };
 
-type Props = { height: string; width: string; line: LineType };
+type Props = { line: LineType };
 
 export function Line(props: Props) {
   const { latSrc, lngSrc, latDst, lngDst } = props.line;
