@@ -1,12 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { Camera } from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
 import { OsmBoundsState, OsmBuildingsState } from "../raster/state";
 
 export const canvasSize = 1000;
-export const MATERIAL = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
 
 let three = {
   renderer: new THREE.WebGLRenderer(),
@@ -20,17 +19,37 @@ function getNormalizationConstants(minNum: number, maxNum: number) {
   return [scaleFactor, strideFactor];
 }
 
+function cleanupMeshesFromScene(scene: THREE.Scene) {
+  for (let i = scene.children.length - 1; i >= 0; i--) {
+    if (scene.children[i].type === "Mesh") {
+      const mesh: THREE.Mesh = scene.children[i] as THREE.Mesh;
+      mesh.geometry.dispose();
+      // TODO: How to dispose of material
+      scene.remove(mesh);
+    }
+  }
+}
+
 function MeshPage() {
   const ref = useRef<HTMLCanvasElement>(null);
   const osmBuildings = useRecoilValue(OsmBuildingsState);
   const osmBounds = useRecoilValue(OsmBoundsState);
 
   useEffect(() => {
+    // Set up canvas
     const canvas = ref.current!;
     canvas.width = canvas.clientWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight;
+
+    // Create scene, add lighting
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("black");
+    scene.background = new THREE.Color("#C8C8C8");
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    scene.add(directionalLight);
+
+    // Create camera
     const camera = new THREE.PerspectiveCamera(
       75,
       canvas.width / canvas.height,
@@ -38,6 +57,8 @@ function MeshPage() {
       10000
     );
     camera.position.z = 40;
+
+    // Create renderer
     const renderer = new THREE.WebGLRenderer({
       canvas,
     });
@@ -64,7 +85,7 @@ function MeshPage() {
     const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
 
     osmBuildings.forEach((osmBuilding) => {
-      const osmVectors = osmBuilding.map(
+      const osmVectors = osmBuilding.coordinates.map(
         (point) =>
           new THREE.Vector2(
             point[0] * latScale + latStride,
@@ -73,12 +94,18 @@ function MeshPage() {
       );
       const polygonShape = new THREE.Shape(osmVectors);
       const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
-        depth: 5,
+        depth: osmBuilding.height,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
     });
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    three.scene.add(ambientLight);
     three.renderer.render(three.scene, three.camera);
+
+    return function cleanupScene() {
+      cleanupMeshesFromScene(three.scene);
+    };
   }, [osmBuildings, osmBounds]);
 
   return (
