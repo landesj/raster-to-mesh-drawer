@@ -2,7 +2,16 @@ import { LatLngBounds } from "leaflet";
 
 type Point = [number, number];
 
-export type BuildingPolygon = Point[];
+type Coordinates = Point[];
+
+export type BuildingPolygon = {
+  coordinates: Coordinates;
+  height: number | undefined;
+};
+
+type BuildingTags = {
+  height?: number;
+};
 
 type BuildingNode = {
   type: "node";
@@ -15,6 +24,7 @@ type BuildingWay = {
   type: "way";
   id: number;
   nodes: number[];
+  tags: BuildingTags;
 };
 
 type BuildingElement = BuildingWay | BuildingNode;
@@ -30,16 +40,21 @@ function getBuildingGeometry(
   element: BuildingElement,
   nodeIdToLatLon: Map<number, [number, number]>
 ) {
-  let geometry: BuildingPolygon = [];
+  let coordinates: Coordinates = [];
+  let height;
   if (element.type === "way") {
     element.nodes.forEach((value) => {
       const latLon = nodeIdToLatLon.get(value);
       if (latLon !== undefined) {
-        geometry.push(latLon);
+        coordinates.push(latLon);
       }
     });
+    height = element.tags.height !== undefined ? element.tags.height : 5;
   }
-  return geometry;
+  return {
+    coordinates: coordinates,
+    height: height,
+  };
 }
 
 async function getRequestUrlFromBBox(bounds: LatLngBounds) {
@@ -67,7 +82,7 @@ async function getRequestUrlFromBBox(bounds: LatLngBounds) {
     return getBuildingGeometry(element, nodeIdToLatLon);
   });
   const nonEmptyBuildingElements = buildingElements.filter(
-    (building) => building.length > 0
+    (building) => building.coordinates.length > 0
   );
   return nonEmptyBuildingElements;
 }

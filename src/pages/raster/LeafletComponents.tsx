@@ -44,7 +44,7 @@ export function RasterImport({ rasterArrayBuffer }: ImportProps) {
 
 export function OsmBuildings({ buildings }: OsmProps) {
   const leafletPolygons = buildings.map((building) => {
-    return <Polygon positions={building} />;
+    return <Polygon positions={building.coordinates} />;
   });
   return <>{leafletPolygons}</>;
 }
