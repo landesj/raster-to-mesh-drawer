@@ -4,6 +4,28 @@ import { useMapEvent } from "react-leaflet";
 import { Line, LineType } from "../../assets/Line";
 import { Point, PointType } from "../../assets/Point";
 import { v4 as uuidv4 } from "uuid";
+import * as turf from "turf";
+
+const DISTANCE_THRESHOLD = 0.00005;
+
+function findSnappingPoint(
+  point: PointType,
+  candidatePoints: PointType[]
+): PointType | undefined {
+  const turfPoint = turf.point([point.lat, point.lng]);
+  for (const candidatePoint of candidatePoints) {
+    const turfCandidatePoint = turf.point([
+      candidatePoint.lat,
+      candidatePoint.lng,
+    ]);
+    if (
+      turf.distance(turfPoint, turfCandidatePoint, "degrees") <
+      DISTANCE_THRESHOLD
+    ) {
+      return candidatePoint;
+    }
+  }
+}
 
 export function DrawingCanvas() {
   const [points, setPoints] = useState<PointType[]>([]);
@@ -15,11 +37,19 @@ export function DrawingCanvas() {
   const setLatestPointDebounced = debounce(setLatestPoint, 100);
 
   useMapEvent("click", (event) => {
-    const newPoint = {
+    let newPoint = {
       lat: event.latlng.lat,
       lng: event.latlng.lng,
     };
+    const snapNewPoint = findSnappingPoint(newPoint, points);
+    if (snapNewPoint !== undefined) {
+      newPoint = snapNewPoint;
+      setLatestPointDebounced(undefined);
+    } else {
+      setLatestPointDebounced(newPoint);
+    }
     const newPoints = [...points, newPoint];
+
     setPointsDebounced(newPoints);
     if (latestPoint) {
       const newLine = {
@@ -31,7 +61,6 @@ export function DrawingCanvas() {
       const newLines = [...lines, newLine];
       setLinesDebounced(newLines);
     }
-    setLatestPointDebounced(newPoint);
   });
   const drawnPoints = points.map((point: PointType) =>
     Point({ key: uuidv4(), point: point })

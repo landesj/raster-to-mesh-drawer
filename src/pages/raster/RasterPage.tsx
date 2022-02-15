@@ -44,7 +44,7 @@ export function RasterPage() {
     fetchOSMBuildings(mapBounds, setOsmBuildings);
     // Unsure if this will run if above function was unsuccessful?
     setOsmBounds(mapBounds);
-  }, [mapBounds, setOsmBuildings]);
+  }, [mapBounds, setOsmBuildings, setOsmBounds]);
 
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
   return (
