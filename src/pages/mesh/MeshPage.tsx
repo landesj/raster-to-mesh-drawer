@@ -3,6 +3,7 @@ import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
 import { OsmBoundsState, OsmBuildingsState } from "../raster/state";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
@@ -38,6 +39,7 @@ function MeshPage() {
   useEffect(() => {
     // Set up canvas
     const canvas = ref.current!;
+
     canvas.width = canvas.clientWidth * window.devicePixelRatio;
     canvas.height = window.innerHeight;
 
@@ -107,6 +109,17 @@ function MeshPage() {
       cleanupMeshesFromScene(three.scene);
     };
   }, [osmBuildings, osmBounds]);
+
+  useEffect(() => {
+    const canvas = ref.current!;
+    const orbit = new OrbitControls(three.camera, canvas);
+    function animate() {
+      requestAnimationFrame(animate);
+      orbit.update();
+      three.renderer.render(three.scene, three.camera);
+    }
+    animate();
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "50%" }}>
