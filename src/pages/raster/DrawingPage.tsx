@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMapEvent } from "react-leaflet";
 import { Line, LineType } from "../../assets/Line";
 import { Point, PointType } from "../../assets/Point";
+import { v4 as uuidv4 } from "uuid";
 
 export function DrawingCanvas() {
   const [points, setPoints] = useState<PointType[]>([]);
@@ -32,8 +33,12 @@ export function DrawingCanvas() {
     }
     setLatestPointDebounced(newPoint);
   });
-  const drawnPoints = points.map((point: PointType) => Point({ point: point }));
-  const drawnLines = lines.map((line: LineType) => Line({ line: line }));
+  const drawnPoints = points.map((point: PointType) =>
+    Point({ key: uuidv4(), point: point })
+  );
+  const drawnLines = lines.map((line: LineType) =>
+    Line({ key: uuidv4(), line: line })
+  );
   return (
     <>
       {drawnPoints}

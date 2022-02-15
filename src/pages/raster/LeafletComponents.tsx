@@ -5,6 +5,7 @@ import { useCallback, useEffect } from "react";
 import { Polygon, useMap } from "react-leaflet";
 import parseGeoraster from "georaster";
 import { BuildingPolygon } from "../../fetch/fetchOsm";
+import { v4 as uuidv4 } from "uuid";
 
 type ImportProps = { rasterArrayBuffer: ArrayBuffer | null };
 
@@ -21,7 +22,7 @@ export function SetMapBounds({ setBounds }: SetBoundsProps) {
   const leafletMap = useMap();
   const onMove = useCallback(() => {
     setBoundsDebounced(leafletMap.getBounds());
-  }, [leafletMap]);
+  }, [leafletMap, setBoundsDebounced]);
 
   useEffect(() => {
     leafletMap.on("move", onMove);
@@ -44,7 +45,7 @@ export function RasterImport({ rasterArrayBuffer }: ImportProps) {
 
 export function OsmBuildings({ buildings }: OsmProps) {
   const leafletPolygons = buildings.map((building) => {
-    return <Polygon positions={building.coordinates} />;
+    return <Polygon key={uuidv4()} positions={building.coordinates} />;
   });
   return <>{leafletPolygons}</>;
 }

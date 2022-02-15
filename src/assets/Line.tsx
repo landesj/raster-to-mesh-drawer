@@ -7,12 +7,13 @@ export type LineType = {
   lngDst: number;
 };
 
-type Props = { line: LineType };
+type Props = { key: string; line: LineType };
 
 export function Line(props: Props) {
   const { latSrc, lngSrc, latDst, lngDst } = props.line;
   return (
     <Polyline
+      key={props.key}
       pathOptions={{ color: "black" }}
       positions={[
         [latSrc, lngSrc],
