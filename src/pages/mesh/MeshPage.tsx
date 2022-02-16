@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
@@ -35,6 +35,7 @@ function MeshPage() {
   const ref = useRef<HTMLCanvasElement>(null);
   const osmBuildings = useRecoilValue(OsmBuildingsState);
   const osmBounds = useRecoilValue(OsmBoundsState);
+  const [orbitBoolean, setOrbitBoolean] = useState(false);
 
   useEffect(() => {
     // Set up canvas
@@ -113,12 +114,18 @@ function MeshPage() {
   useEffect(() => {
     const canvas = ref.current!;
     const orbit = new OrbitControls(three.camera, canvas);
+    let animationId: number;
     function animate() {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       orbit.update();
       three.renderer.render(three.scene, three.camera);
     }
-    animate();
+    canvas.addEventListener("mousedown", () => {
+      animate();
+    });
+    canvas.addEventListener("mouseup", () => {
+      cancelAnimationFrame(animationId);
+    });
   }, []);
 
   return (
