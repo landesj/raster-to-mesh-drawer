@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
 import { OsmBoundsState, OsmBuildingsState } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { Page } from "../style";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
@@ -129,10 +130,9 @@ function MeshPage() {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "50%" }}>
-      <h2>This is the Mesh Page.</h2>
+    <Page>
       <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
-    </div>
+    </Page>
   );
 }
 

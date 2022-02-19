@@ -5,11 +5,11 @@ import { DrawingCanvas } from "./DrawingPage";
 import { fetchOSMBuildings } from "../../fetch/fetchOsm";
 import { LatLngBounds } from "leaflet";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
-import { Button, Input, Label, Page } from "./style";
+import { Button, Input, Label, Page } from "../style";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { OsmBoundsState, OsmBuildingsState } from "./state";
 
-export const CANVAS_HEIGHT = "800px";
+export const CANVAS_HEIGHT = "90vh";
 
 export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
@@ -47,22 +47,22 @@ export function RasterPage() {
   }, [mapBounds, setOsmBuildings, setOsmBounds]);
 
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
+  const cursorStyle = isDrawing ? "default" : "grab";
   return (
     <Page>
-      <h2>This is the Raster page.</h2>
       <div style={{ padding: "10px" }}>
         <MapContainer
           center={[51.505, -0.09]}
           zoom={13}
-          style={{ height: CANVAS_HEIGHT, width: "100%" }}
+          style={{ height: CANVAS_HEIGHT, width: "100%", cursor: "default" }}
           minZoom={1}
-          maxZoom={30}
+          maxZoom={25}
           maxNativeZoom={25}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={30}
+            maxZoom={25}
           />
           {isDrawing && <DrawingCanvas />}
           <RasterImport rasterArrayBuffer={rasterState} />

@@ -6,7 +6,7 @@ import { Point, PointType } from "../../assets/Point";
 import { v4 as uuidv4 } from "uuid";
 import * as turf from "turf";
 
-const DISTANCE_THRESHOLD = 0.00005;
+const DISTANCE_THRESHOLD = 0.00001;
 
 function findSnappingPoint(
   point: PointType,
