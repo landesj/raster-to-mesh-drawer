@@ -42,9 +42,11 @@ export function DrawingCanvas() {
       lng: event.latlng.lng,
     };
     const snapNewPoint = findSnappingPoint(newPoint, points);
-    if (snapNewPoint !== undefined) {
+    if (snapNewPoint) {
       newPoint = snapNewPoint;
-      setLatestPointDebounced(undefined);
+      latestPoint
+        ? setLatestPointDebounced(undefined)
+        : setLatestPointDebounced(newPoint);
     } else {
       setLatestPointDebounced(newPoint);
     }

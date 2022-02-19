@@ -36,7 +36,6 @@ export function RasterImport({ rasterArrayBuffer }: ImportProps) {
   useEffect(() => {
     if (!rasterArrayBuffer) return;
     parseGeoraster(rasterArrayBuffer).then((georaster: any) => {
-      console.log("here");
       const geoTiff = new GeoRasterLayer({
         georaster: georaster,
         debugLevel: 1,
