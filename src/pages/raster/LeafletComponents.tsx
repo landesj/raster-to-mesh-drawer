@@ -3,9 +3,9 @@ import { LatLngBounds } from "leaflet";
 import { debounce } from "lodash";
 import { useCallback, useEffect } from "react";
 import { Polygon, useMap } from "react-leaflet";
-import parseGeoraster from "georaster";
 import { BuildingPolygon } from "../../fetch/fetchOsm";
 import { v4 as uuidv4 } from "uuid";
+import parseGeoraster from "georaster";
 
 type ImportProps = { rasterArrayBuffer: ArrayBuffer | null };
 
@@ -33,13 +33,18 @@ export function SetMapBounds({ setBounds }: SetBoundsProps) {
 export function RasterImport({ rasterArrayBuffer }: ImportProps) {
   const leafletMap = useMap();
 
-  if (!rasterArrayBuffer) return <></>;
-
-  parseGeoraster(rasterArrayBuffer).then((georaster: any) => {
-    const geoTiff = new GeoRasterLayer({ georaster: georaster });
-    leafletMap.addLayer(geoTiff);
-    leafletMap.fitBounds(geoTiff.getBounds());
-  });
+  useEffect(() => {
+    if (!rasterArrayBuffer) return;
+    parseGeoraster(rasterArrayBuffer).then((georaster: any) => {
+      console.log("here");
+      const geoTiff = new GeoRasterLayer({
+        georaster: georaster,
+        debugLevel: 1,
+      });
+      leafletMap.addLayer(geoTiff);
+      leafletMap.fitBounds(geoTiff.getBounds());
+    });
+  }, [rasterArrayBuffer]);
   return <></>;
 }
 
