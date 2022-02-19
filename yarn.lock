@@ -4329,7 +4329,7 @@ geojson-random@^0.2.2:
   resolved "https://registry.yarnpkg.com/geojson-random/-/geojson-random-0.2.2.tgz#ab4838f126adc5e16f8f94e655def820f9119dbc"
   integrity sha1-q0g48SatxeFvj5TmVd74IPkRnbw=
 
-georaster-layer-for-leaflet@^3.2.0:
+georaster-layer-for-leaflet@^3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/georaster-layer-for-leaflet/-/georaster-layer-for-leaflet-3.5.0.tgz#f49122c5f31c213b001deeb3cb6964d771e1c763"
   integrity sha512-Al8pCN1nSLf5ZPwJcjXuw1GaUzQ7zOyORxSALvfIoDB3RdFlXqgyA2FZag3WyWsPycrURPSXR60Irz7RwYzy8Q==
