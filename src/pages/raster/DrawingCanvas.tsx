@@ -5,6 +5,8 @@ import { Line, LineType } from "../../assets/Line";
 import { Point, PointType } from "../../assets/Point";
 import { v4 as uuidv4 } from "uuid";
 import * as turf from "turf";
+import { useRecoilState } from "recoil";
+import { DrawnLinesState, DrawnPointsState } from "./state";
 
 const DISTANCE_THRESHOLD = 0.00001;
 
@@ -28,8 +30,8 @@ function findSnappingPoint(
 }
 
 export function DrawingCanvas() {
-  const [points, setPoints] = useState<PointType[]>([]);
-  const [lines, setLines] = useState<LineType[]>([]);
+  const [points, setPoints] = useRecoilState(DrawnPointsState);
+  const [lines, setLines] = useRecoilState(DrawnLinesState);
   const [latestPoint, setLatestPoint] = useState<PointType | undefined>();
 
   const setPointsDebounced = debounce(setPoints, 100);

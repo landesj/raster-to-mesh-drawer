@@ -15,6 +15,7 @@ function App() {
     <RecoilRoot>
       <AppPage>
         <RasterPage />
+        <MeshPage />
       </AppPage>
     </RecoilRoot>
   );
