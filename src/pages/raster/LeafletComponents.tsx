@@ -1,8 +1,8 @@
 import GeoRasterLayer from "georaster-layer-for-leaflet";
 import { LatLngBounds } from "leaflet";
 import { debounce } from "lodash";
-import { useCallback, useEffect } from "react";
-import { Polygon, useMap } from "react-leaflet";
+import { useEffect } from "react";
+import { Polygon, useMap, useMapEvent } from "react-leaflet";
 import { BuildingPolygon } from "../../fetch/fetchOsm";
 import { v4 as uuidv4 } from "uuid";
 import parseGeoraster from "georaster";
@@ -20,13 +20,7 @@ type OsmProps = {
 export function SetMapBounds({ setBounds }: SetBoundsProps) {
   const setBoundsDebounced = debounce(setBounds, 100);
   const leafletMap = useMap();
-  const onMove = useCallback(() => {
-    setBoundsDebounced(leafletMap.getBounds());
-  }, [leafletMap, setBoundsDebounced]);
-
-  useEffect(() => {
-    leafletMap.on("move", onMove);
-  }, [leafletMap, onMove]);
+  useMapEvent("move", () => setBoundsDebounced(leafletMap.getBounds()));
   return <></>;
 }
 
@@ -43,7 +37,7 @@ export function RasterImport({ rasterArrayBuffer }: ImportProps) {
       leafletMap.addLayer(geoTiff);
       leafletMap.fitBounds(geoTiff.getBounds());
     });
-  }, [rasterArrayBuffer]);
+  }, [rasterArrayBuffer, leafletMap]);
   return <></>;
 }
 

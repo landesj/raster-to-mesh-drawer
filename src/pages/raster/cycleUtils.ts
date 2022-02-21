@@ -73,7 +73,8 @@ export function filterDuplicateCycles(cycles: Cycle[]): Cycle[] {
       endIndex += 1
     ) {
       if (
-        sortedCycles[startIndex].toString() == sortedCycles[endIndex].toString()
+        sortedCycles[startIndex].toString() ===
+        sortedCycles[endIndex].toString()
       ) {
         removableIndices.push(endIndex);
       }
