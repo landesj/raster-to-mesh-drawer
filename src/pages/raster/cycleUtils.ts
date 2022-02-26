@@ -1,7 +1,12 @@
 import * as turf from "turf";
 import booleanContains from "@turf/boolean-contains";
+import { Feature, GeoJsonProperties, Polygon } from "geojson";
 
 type Cycle = [number, number][];
+type PolygonWithHeight = {
+  polygon: Feature<Polygon, GeoJsonProperties>;
+  height: number;
+};
 
 function _pointsEqual(
   pointA: [number, number],
@@ -89,7 +94,9 @@ export function filterDuplicateCycles(cycles: Cycle[]): Cycle[] {
   return uniqueCycles;
 }
 
-export function removeOverlappingCycles(cycles: Cycle[]) {
+export function removeOverlappingCycles(
+  cycles: Cycle[]
+): Feature<Polygon, GeoJsonProperties>[] {
   const polygons = cycles.map((cycle) => turf.polygon([[...cycle, cycle[0]]]));
   let removableIndices = [];
   for (let startIndex = 0; startIndex < polygons.length; startIndex += 1) {
@@ -107,4 +114,69 @@ export function removeOverlappingCycles(cycles: Cycle[]) {
     }
   }
   return finalPolygons;
+}
+
+function _getPolygonBounds(polygon: Feature<Polygon, GeoJsonProperties>) {
+  const yMin = polygon.geometry.coordinates[0].reduce(
+    (currentMin, coord2) => Math.min(currentMin, coord2[0]),
+    Infinity
+  );
+  const yMax = polygon.geometry.coordinates[0].reduce(
+    (currentMin, coord2) => Math.max(currentMin, coord2[0]),
+    -Infinity
+  );
+  const xMin = polygon.geometry.coordinates[0].reduce(
+    (currentMin, coord2) => Math.min(currentMin, coord2[1]),
+    Infinity
+  );
+  const xMax = polygon.geometry.coordinates[0].reduce(
+    (currentMin, coord2) => Math.max(currentMin, coord2[1]),
+    -Infinity
+  );
+  return [
+    [xMin, yMin],
+    [xMax, yMax],
+  ];
+}
+
+function _getPolygonHeight(
+  polygon: Feature<Polygon, GeoJsonProperties>,
+  georaster: any
+): number {
+  let totalHeight = 0;
+  let totalPixels = 0;
+  const [[xMin, yMin], [xMax, yMax]] = _getPolygonBounds(polygon);
+  for (let x = xMin; x <= xMax; x += georaster.pixelWidth) {
+    for (let y = yMin; y <= yMax; y += georaster.pixelHeight) {
+      const newPoint = turf.point([y, x]);
+      if (booleanContains(polygon, newPoint)) {
+        const xPixelIndex = Math.round(
+          (x - georaster.xmin) / georaster.pixelWidth
+        );
+        const yPixelIndex = Math.round(
+          (georaster.ymax - y) / georaster.pixelHeight
+        );
+        const pixelValue = georaster.values[0][yPixelIndex][xPixelIndex];
+        if (pixelValue !== georaster.noDataValue) {
+          totalHeight += pixelValue;
+          totalPixels += 1;
+        }
+      }
+    }
+  }
+  return totalHeight / totalPixels;
+}
+
+export function fetchHeightFromRaster(
+  polygons: Feature<Polygon, GeoJsonProperties>[],
+  georaster: any
+): PolygonWithHeight[] {
+  const polygonsWithHeight = polygons.map((polygon) => {
+    const polygonHeight = _getPolygonHeight(polygon, georaster);
+    return {
+      polygon: polygon,
+      height: polygonHeight,
+    };
+  });
+  return polygonsWithHeight;
 }

@@ -6,6 +6,8 @@ import { Polygon, useMap, useMapEvent } from "react-leaflet";
 import { BuildingPolygon } from "../../fetch/fetchOsm";
 import { v4 as uuidv4 } from "uuid";
 import parseGeoraster from "georaster";
+import { useSetRecoilState } from "recoil";
+import { GeoTiffState } from "./state";
 
 type ImportProps = { rasterArrayBuffer: ArrayBuffer | null };
 
@@ -26,6 +28,7 @@ export function SetMapBounds({ setBounds }: SetBoundsProps) {
 
 export function RasterImport({ rasterArrayBuffer }: ImportProps) {
   const leafletMap = useMap();
+  const setGeoTiffState = useSetRecoilState(GeoTiffState);
 
   useEffect(() => {
     if (!rasterArrayBuffer) return;
@@ -36,6 +39,7 @@ export function RasterImport({ rasterArrayBuffer }: ImportProps) {
       });
       leafletMap.addLayer(geoTiff);
       leafletMap.fitBounds(geoTiff.getBounds());
+      setGeoTiffState(georaster);
     });
   }, [rasterArrayBuffer, leafletMap]);
   return <></>;
