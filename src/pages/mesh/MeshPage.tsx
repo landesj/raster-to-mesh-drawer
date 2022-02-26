@@ -119,6 +119,73 @@ function MeshPage() {
   }, [osmBuildings, mapBounds]);
 
   useEffect(() => {
+    if (
+      mapBounds === undefined ||
+      drawnPolygons === undefined ||
+      drawnPolygons.length === 0
+    ) {
+      return;
+    }
+
+    const latMax = mapBounds.getNorthEast().lat;
+    const latMin = mapBounds.getSouthWest().lat;
+    const lonMin = mapBounds.getSouthWest().lng;
+    const lonMax = mapBounds.getNorthEast().lng;
+
+    const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
+    const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
+
+    drawnPolygons.forEach((polygonWithHeight) => {
+      const osmVectors = polygonWithHeight.polygon.geometry.coordinates[0].map(
+        (point) =>
+          new THREE.Vector2(
+            point[0] * latScale + latStride,
+            point[1] * lonScale + lonStride
+          )
+      );
+      const polygonShape = new THREE.Shape(osmVectors);
+      const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
+        depth: polygonWithHeight.height,
+      });
+      const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
+      three.scene.add(buildingMesh);
+
+      let osmVectorsReversed = [];
+      for (
+        let i = polygonWithHeight.polygon.geometry.coordinates[0].length - 1;
+        i >= 0;
+        i--
+      ) {
+        const point = polygonWithHeight.polygon.geometry.coordinates[0][i];
+        const newPoint = new THREE.Vector2(
+          point[0] * latScale + latStride,
+          point[1] * lonScale + lonStride
+        );
+        osmVectorsReversed.push(newPoint);
+      }
+      const polygonShapeReversed = new THREE.Shape(osmVectorsReversed);
+      const extrudedGeometryReversed = new THREE.ExtrudeGeometry(
+        polygonShapeReversed,
+        {
+          depth: polygonWithHeight.height,
+        }
+      );
+      const buildingMeshReversed = new THREE.Mesh(
+        extrudedGeometryReversed,
+        MATERIAL
+      );
+      three.scene.add(buildingMeshReversed);
+    });
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    three.scene.add(ambientLight);
+    three.renderer.render(three.scene, three.camera);
+
+    return function cleanupScene() {
+      cleanupMeshesFromScene(three.scene);
+    };
+  }, [drawnPolygons, mapBounds]);
+
+  useEffect(() => {
     const canvas = ref.current!;
     const orbit = new OrbitControls(three.camera, canvas);
     let animationId: number;
