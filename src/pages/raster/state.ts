@@ -4,6 +4,7 @@ import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
 import { BuildingPolygon } from "../../fetch/fetchOsm";
 import {
+  fetchHeightFromRaster,
   filterDuplicateCycles,
   findCycles,
   removeOverlappingCycles,
@@ -14,8 +15,8 @@ export const OsmBuildingsState = atom<BuildingPolygon[]>({
   default: [],
 });
 
-export const OsmBoundsState = atom<LatLngBounds | undefined>({
-  key: "OsmBoundsState",
+export const BoundsState = atom<LatLngBounds | undefined>({
+  key: "BoundsState",
   default: undefined,
 });
 
@@ -33,6 +34,8 @@ export const DrawPolygonsSelector = selector({
   key: "DrawnPolygonsSelector",
   get: ({ get }) => {
     const drawnLines = get(DrawnLinesState);
+    const georaster = get(GeoTiffState);
+    if (georaster === undefined) return [];
     const adjacencies = new Map<string, [number, number][]>();
     drawnLines.forEach((line: LineType) => {
       const pointSrc: [number, number] = [line.latSrc, line.lngSrc];
@@ -59,6 +62,15 @@ export const DrawPolygonsSelector = selector({
     const cycles = findCycles(adjacencies);
     const uniqueCycles = filterDuplicateCycles(cycles);
     const distinctPolygons = removeOverlappingCycles(uniqueCycles);
-    return distinctPolygons;
+    const polygonsWithHeight = fetchHeightFromRaster(
+      distinctPolygons,
+      georaster
+    );
+    return polygonsWithHeight;
   },
+});
+
+export const GeoTiffState = atom({
+  key: "GeoTiffState",
+  default: undefined,
 });

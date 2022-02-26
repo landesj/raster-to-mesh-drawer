@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
 import {
   DrawPolygonsSelector,
-  OsmBoundsState,
+  BoundsState,
   OsmBuildingsState,
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Page } from "../style";
+import * as turf from "turf";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
@@ -39,7 +40,7 @@ function cleanupMeshesFromScene(scene: THREE.Scene) {
 function MeshPage() {
   const ref = useRef<HTMLCanvasElement>(null);
   const osmBuildings = useRecoilValue(OsmBuildingsState);
-  const osmBounds = useRecoilValue(OsmBoundsState);
+  const mapBounds = useRecoilValue(BoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
 
   useEffect(() => {
@@ -80,14 +81,14 @@ function MeshPage() {
   }, []);
 
   useEffect(() => {
-    if (osmBounds === undefined || osmBuildings.length === 1) {
+    if (mapBounds === undefined || osmBuildings.length === 1) {
       return;
     }
 
-    const latMax = osmBounds.getNorthEast().lat;
-    const latMin = osmBounds.getSouthWest().lat;
-    const lonMin = osmBounds.getSouthWest().lng;
-    const lonMax = osmBounds.getNorthEast().lng;
+    const latMax = mapBounds.getNorthEast().lat;
+    const latMin = mapBounds.getSouthWest().lat;
+    const lonMin = mapBounds.getSouthWest().lng;
+    const lonMax = mapBounds.getNorthEast().lng;
 
     const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
     const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
@@ -100,6 +101,7 @@ function MeshPage() {
             point[1] * lonScale + lonStride
           )
       );
+      console.log(osmVectors);
       const polygonShape = new THREE.Shape(osmVectors);
       const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
         depth: osmBuilding.height,
@@ -114,7 +116,7 @@ function MeshPage() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [osmBuildings, osmBounds]);
+  }, [osmBuildings, mapBounds]);
 
   useEffect(() => {
     const canvas = ref.current!;

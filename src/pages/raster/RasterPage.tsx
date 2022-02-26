@@ -3,20 +3,18 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { fetchOSMBuildings } from "../../fetch/fetchOsm";
-import { LatLngBounds } from "leaflet";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 import { Button, Input, Label, Page } from "../style";
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { OsmBoundsState, OsmBuildingsState } from "./state";
+import { useRecoilState } from "recoil";
+import { BoundsState, OsmBuildingsState } from "./state";
 
 export const CANVAS_HEIGHT = "90vh";
 
 export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
-  const [mapBounds, setMapBounds] = useState<LatLngBounds>();
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
-  const setOsmBounds = useSetRecoilState(OsmBoundsState);
+  const [mapBounds, setMapBounds] = useRecoilState(BoundsState);
 
   const onChange = (files: FileList | null) => {
     if (files !== null) {
@@ -42,9 +40,7 @@ export function RasterPage() {
       return;
     }
     fetchOSMBuildings(mapBounds, setOsmBuildings);
-    // Unsure if this will run if above function was unsuccessful?
-    setOsmBounds(mapBounds);
-  }, [mapBounds, setOsmBuildings, setOsmBounds]);
+  }, [mapBounds, setOsmBuildings]);
 
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
   const cursorStyle = isDrawing ? "default" : "grab";
