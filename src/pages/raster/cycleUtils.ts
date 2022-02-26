@@ -28,7 +28,7 @@ export function findCycles(adjacencies: Map<string, [number, number][]>) {
     dstPoints.forEach((dstPoint) => {
       let visitedPoints = new Set<string>();
       visitedPoints.add(currentPointString);
-      let queue = [{ points: [dstPoint], depth: 1 }];
+      let queue = [{ points: [currentPoint, dstPoint], depth: 1 }];
       while (queue.length > 0) {
         const { points, depth } = queue[0];
         const queuePoint = points[points.length - 1];
@@ -38,7 +38,7 @@ export function findCycles(adjacencies: Map<string, [number, number][]>) {
         if (queueAdjacencies) {
           queueAdjacencies.forEach((adjacentPoint) => {
             if (_pointsEqual(currentPoint, adjacentPoint) && depth !== 1) {
-              cycles.push([...points, currentPoint]);
+              cycles.push([...points]);
             } else if (!visitedPoints.has(adjacentPoint.toString())) {
               queue.push({
                 points: [...points, adjacentPoint],
@@ -63,8 +63,9 @@ function _sortPoints(
 }
 
 export function filterDuplicateCycles(cycles: Cycle[]): Cycle[] {
-  const sortedCycles = cycles.map((cycle) =>
-    cycle.sort((a, b) => _sortPoints(a, b))
+  const cyclesDuplicated = [...cycles];
+  const sortedCycles = cyclesDuplicated.map((cycle) =>
+    [...cycle].sort((a, b) => _sortPoints(a, b))
   );
   let removableIndices = [];
   for (
