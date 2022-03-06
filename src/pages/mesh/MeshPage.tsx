@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
@@ -9,6 +9,7 @@ import {
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Page } from "../style";
+import { LatLngBounds } from "leaflet";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
@@ -23,6 +24,19 @@ function getNormalizationConstants(minNum: number, maxNum: number) {
   const scaleFactor = 30 / (maxNum - minNum);
   const strideFactor = 15 - maxNum * scaleFactor;
   return [scaleFactor, strideFactor];
+}
+
+function getMapBounds(mapBounds: LatLngBounds) {
+  const latMax = mapBounds.getNorthEast().lat;
+  const latMin = mapBounds.getSouthWest().lat;
+  const lonMin = mapBounds.getSouthWest().lng;
+  const lonMax = mapBounds.getNorthEast().lng;
+  return {
+    latMin: latMin,
+    latMax: latMax,
+    lonMin: lonMin,
+    lonMax: lonMax,
+  };
 }
 
 function cleanupMeshesFromScene(scene: THREE.Scene) {
@@ -42,6 +56,9 @@ function MeshPage() {
   const mapBounds = useRecoilValue(BoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
 
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+
   let cameraHeight = 40;
 
   useEffect(() => {
@@ -54,9 +71,7 @@ function MeshPage() {
     // Create scene, add lighting
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#C8C8C8");
-    const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     scene.add(directionalLight);
 
     // Create camera
@@ -86,10 +101,7 @@ function MeshPage() {
       return;
     }
 
-    const latMax = mapBounds.getNorthEast().lat;
-    const latMin = mapBounds.getSouthWest().lat;
-    const lonMin = mapBounds.getSouthWest().lng;
-    const lonMax = mapBounds.getNorthEast().lng;
+    const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
 
     const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
     const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
@@ -109,8 +121,7 @@ function MeshPage() {
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
     });
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    three.scene.add(ambientLight);
+    three.scene.add(directionalLight);
     three.renderer.render(three.scene, three.camera);
 
     return function cleanupScene() {
@@ -127,10 +138,7 @@ function MeshPage() {
       return;
     }
 
-    const latMax = mapBounds.getNorthEast().lat;
-    const latMin = mapBounds.getSouthWest().lat;
-    const lonMin = mapBounds.getSouthWest().lng;
-    const lonMax = mapBounds.getNorthEast().lng;
+    const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
 
     const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
     const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
@@ -149,42 +157,13 @@ function MeshPage() {
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
-
-      let vectorsReversed = [];
-      for (
-        let i = polygonWithHeight.polygon.geometry.coordinates[0].length - 1;
-        i >= 0;
-        i--
-      ) {
-        const point = polygonWithHeight.polygon.geometry.coordinates[0][i];
-        const newPoint = new THREE.Vector2(
-          point[0] * latScale + latStride,
-          point[1] * lonScale + lonStride
-        );
-        vectorsReversed.push(newPoint);
-      }
-      const polygonShapeReversed = new THREE.Shape(vectorsReversed);
-      const extrudedGeometryReversed = new THREE.ExtrudeGeometry(
-        polygonShapeReversed,
-        {
-          depth: polygonWithHeight.height,
-        }
-      );
-      const buildingMeshReversed = new THREE.Mesh(
-        extrudedGeometryReversed,
-        MATERIAL
-      );
-      three.scene.add(buildingMeshReversed);
-
       if (polygonWithHeight.height > cameraHeight) {
         cameraHeight = polygonWithHeight.height + 15;
         three.camera.position.z = cameraHeight;
       }
     });
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    three.scene.add(ambientLight);
+    three.scene.add(directionalLight);
     three.renderer.render(three.scene, three.camera);
-    three.camera.position.z = cameraHeight;
 
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
