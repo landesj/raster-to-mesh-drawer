@@ -15,6 +15,7 @@ export function RasterPage() {
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
   const [mapBounds, setMapBounds] = useRecoilState(BoundsState);
+  const [showRaster, setShowRaster] = useState<boolean>(true);
 
   const onChange = (files: FileList | null) => {
     if (files !== null) {
@@ -42,8 +43,12 @@ export function RasterPage() {
     fetchOSMBuildings(mapBounds, setOsmBuildings);
   }, [mapBounds, setOsmBuildings]);
 
+  const changeShowRasterState = () => {
+    setShowRaster(!showRaster);
+  };
+
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
-  const cursorStyle = isDrawing ? "default" : "grab";
+  const showRasterText = showRaster ? "Hide Raster" : "Show Raster";
   return (
     <Page>
       <div style={{ padding: "10px" }}>
@@ -61,7 +66,10 @@ export function RasterPage() {
             maxZoom={25}
           />
           {isDrawing && <DrawingCanvas />}
-          <RasterImport rasterArrayBuffer={rasterState} />
+          <RasterImport
+            rasterArrayBuffer={rasterState}
+            showRaster={showRaster}
+          />
           <SetMapBounds setBounds={setMapBounds} />
           {osmBuildings.length !== 0 && (
             <OsmBuildings buildings={osmBuildings} />
@@ -71,6 +79,9 @@ export function RasterPage() {
       <div>
         <Button onClick={changeIsDrawing}>{drawingButtonText}</Button>
         <Button onClick={orderOSMBuildings}>Order OSM Buildings</Button>
+        {rasterState !== null && (
+          <Button onClick={changeShowRasterState}>{showRasterText}</Button>
+        )}
         <Label>Import GeoTiff File</Label>
         <Input
           id="tif_input"

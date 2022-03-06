@@ -1,7 +1,7 @@
 import GeoRasterLayer from "georaster-layer-for-leaflet";
 import { LatLngBounds } from "leaflet";
 import { debounce } from "lodash";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Polygon, useMap, useMapEvent } from "react-leaflet";
 import { BuildingPolygon } from "../../fetch/fetchOsm";
 import { v4 as uuidv4 } from "uuid";
@@ -9,7 +9,10 @@ import parseGeoraster from "georaster";
 import { useSetRecoilState } from "recoil";
 import { GeoTiffState } from "./state";
 
-type ImportProps = { rasterArrayBuffer: ArrayBuffer | null };
+type ImportProps = {
+  rasterArrayBuffer: ArrayBuffer | null;
+  showRaster: boolean;
+};
 
 type SetBoundsProps = {
   setBounds: React.Dispatch<React.SetStateAction<LatLngBounds | undefined>>;
@@ -26,9 +29,11 @@ export function SetMapBounds({ setBounds }: SetBoundsProps) {
   return <></>;
 }
 
-export function RasterImport({ rasterArrayBuffer }: ImportProps) {
+export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
   const leafletMap = useMap();
   const setGeoTiffState = useSetRecoilState(GeoTiffState);
+  const [geoRasterLayerShown, setGeoRasterLayerShown] =
+    useState<any>(undefined);
 
   useEffect(() => {
     if (!rasterArrayBuffer) return;
@@ -40,8 +45,18 @@ export function RasterImport({ rasterArrayBuffer }: ImportProps) {
       leafletMap.addLayer(geoTiff);
       leafletMap.fitBounds(geoTiff.getBounds());
       setGeoTiffState(georaster);
+      setGeoRasterLayerShown(geoTiff);
     });
-  }, [rasterArrayBuffer, leafletMap]);
+  }, [rasterArrayBuffer, leafletMap, setGeoTiffState]);
+
+  useEffect(() => {
+    if (!showRaster && geoRasterLayerShown !== undefined) {
+      leafletMap.removeLayer(geoRasterLayerShown);
+    }
+    if (showRaster && geoRasterLayerShown !== undefined) {
+      leafletMap.addLayer(geoRasterLayerShown);
+    }
+  }, [showRaster, geoRasterLayerShown, leafletMap]);
   return <></>;
 }
 
