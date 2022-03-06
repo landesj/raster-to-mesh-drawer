@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
@@ -9,7 +9,6 @@ import {
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Page } from "../style";
-import * as turf from "turf";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
@@ -43,6 +42,8 @@ function MeshPage() {
   const mapBounds = useRecoilValue(BoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
 
+  let cameraHeight = 40;
+
   useEffect(() => {
     // Set up canvas
     const canvas = ref.current!;
@@ -65,7 +66,7 @@ function MeshPage() {
       0.1,
       10000
     );
-    camera.position.z = 40;
+    camera.position.z = cameraHeight;
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({
@@ -101,7 +102,6 @@ function MeshPage() {
             point[1] * lonScale + lonStride
           )
       );
-      console.log(osmVectors);
       const polygonShape = new THREE.Shape(osmVectors);
       const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
         depth: osmBuilding.height,
@@ -136,21 +136,21 @@ function MeshPage() {
     const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
 
     drawnPolygons.forEach((polygonWithHeight) => {
-      const osmVectors = polygonWithHeight.polygon.geometry.coordinates[0].map(
+      const vectors = polygonWithHeight.polygon.geometry.coordinates[0].map(
         (point) =>
           new THREE.Vector2(
             point[0] * latScale + latStride,
             point[1] * lonScale + lonStride
           )
       );
-      const polygonShape = new THREE.Shape(osmVectors);
+      const polygonShape = new THREE.Shape(vectors);
       const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
         depth: polygonWithHeight.height,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
 
-      let osmVectorsReversed = [];
+      let vectorsReversed = [];
       for (
         let i = polygonWithHeight.polygon.geometry.coordinates[0].length - 1;
         i >= 0;
@@ -161,9 +161,9 @@ function MeshPage() {
           point[0] * latScale + latStride,
           point[1] * lonScale + lonStride
         );
-        osmVectorsReversed.push(newPoint);
+        vectorsReversed.push(newPoint);
       }
-      const polygonShapeReversed = new THREE.Shape(osmVectorsReversed);
+      const polygonShapeReversed = new THREE.Shape(vectorsReversed);
       const extrudedGeometryReversed = new THREE.ExtrudeGeometry(
         polygonShapeReversed,
         {
@@ -175,10 +175,16 @@ function MeshPage() {
         MATERIAL
       );
       three.scene.add(buildingMeshReversed);
+
+      if (polygonWithHeight.height > cameraHeight) {
+        cameraHeight = polygonWithHeight.height + 15;
+        three.camera.position.z = cameraHeight;
+      }
     });
     const ambientLight = new THREE.AmbientLight(0x404040);
     three.scene.add(ambientLight);
     three.renderer.render(three.scene, three.camera);
+    three.camera.position.z = cameraHeight;
 
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
