@@ -2,29 +2,101 @@ import { debounce } from "lodash";
 import { useState } from "react";
 import { useMapEvent } from "react-leaflet";
 import { Line, LineType } from "../../assets/Line";
-import { Point, PointType } from "../../assets/Point";
+import { MapPoint, PointType } from "../../assets/Point";
 import { v4 as uuidv4 } from "uuid";
 import * as turf from "turf";
 import { useRecoilState } from "recoil";
 import { DrawnLinesState, DrawnPointsState } from "./state";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
+import { Feature, GeoJsonProperties, Point } from "geojson";
 
 const DISTANCE_THRESHOLD = 0.00001;
 
+type SnapEvent = {
+  snappingPoint?: PointType;
+  newLines?: LineType[];
+  removedLine?: LineType;
+};
+
+function _withinDistanceThreshold(
+  pointA: Feature<Point, GeoJsonProperties>,
+  pointB: Feature<Point, GeoJsonProperties>
+) {
+  return turf.distance(pointA, pointB, "degrees") < DISTANCE_THRESHOLD;
+}
+
+function _lineEquals(lineA: LineType, lineB: LineType): boolean {
+  return (
+    lineA.latSrc === lineB.latSrc &&
+    lineA.lngSrc === lineB.lngSrc &&
+    lineA.latDst === lineB.latDst &&
+    lineA.lngDst === lineB.lngDst
+  );
+}
+
+function _updateLines(
+  currentLines: LineType[],
+  newLines: LineType[],
+  removeableLine: LineType | undefined
+) {
+  let updatedLines = [...currentLines, ...newLines];
+  if (removeableLine) {
+    updatedLines = updatedLines.filter(
+      (line) => !_lineEquals(line, removeableLine)
+    );
+  }
+  return updatedLines;
+}
+
 function findSnappingPoint(
   point: PointType,
-  candidatePoints: PointType[]
-): PointType | undefined {
+  candidatePoints: PointType[],
+  candidateLines: LineType[]
+): SnapEvent | undefined {
   const turfPoint = turf.point([point.lat, point.lng]);
   for (const candidatePoint of candidatePoints) {
     const turfCandidatePoint = turf.point([
       candidatePoint.lat,
       candidatePoint.lng,
     ]);
-    if (
-      turf.distance(turfPoint, turfCandidatePoint, "degrees") <
-      DISTANCE_THRESHOLD
-    ) {
-      return candidatePoint;
+    if (_withinDistanceThreshold(turfPoint, turfCandidatePoint)) {
+      return { snappingPoint: candidatePoint };
+    }
+  }
+  for (const candidateLine of candidateLines) {
+    const turfCandidateLine = turf.lineString([
+      [candidateLine.latSrc, candidateLine.lngSrc],
+      [candidateLine.latDst, candidateLine.lngDst],
+    ]);
+    const snappedPoint = nearestPointOnLine(turfCandidateLine, turfPoint, {
+      units: "degrees",
+    }) as Feature<Point, GeoJsonProperties>;
+    if (_withinDistanceThreshold(turfPoint, snappedPoint)) {
+      const lat = snappedPoint.geometry.coordinates[0];
+      const lng = snappedPoint.geometry.coordinates[1];
+      const newLines = [
+        {
+          latSrc: candidateLine.latSrc,
+          lngSrc: candidateLine.lngSrc,
+          latDst: lat,
+          lngDst: lng,
+        },
+        {
+          latSrc: candidateLine.latDst,
+          lngSrc: candidateLine.lngDst,
+          latDst: lat,
+          lngDst: lng,
+        },
+      ];
+      const snappingPoint = {
+        lat: snappedPoint.geometry.coordinates[0],
+        lng: snappedPoint.geometry.coordinates[1],
+      };
+      return {
+        snappingPoint: snappingPoint,
+        newLines: newLines,
+        removedLine: candidateLine,
+      };
     }
   }
 }
@@ -43,9 +115,10 @@ export function DrawingCanvas() {
       lat: event.latlng.lat,
       lng: event.latlng.lng,
     };
-    const snapNewPoint = findSnappingPoint(newPoint, points);
-    if (snapNewPoint) {
-      newPoint = snapNewPoint;
+    let newLines = [];
+    const snapNewPoint = findSnappingPoint(newPoint, points, lines);
+    if (snapNewPoint && snapNewPoint.snappingPoint) {
+      newPoint = snapNewPoint.snappingPoint;
       latestPoint
         ? setLatestPointDebounced(undefined)
         : setLatestPointDebounced(newPoint);
@@ -62,12 +135,21 @@ export function DrawingCanvas() {
         latDst: newPoint.lat,
         lngDst: newPoint.lng,
       };
-      const newLines = [...lines, newLine];
-      setLinesDebounced(newLines);
+      newLines.push(newLine);
     }
+    if (snapNewPoint && snapNewPoint.newLines) {
+      newLines = [...newLines, ...snapNewPoint.newLines];
+    }
+
+    const updatedLines = _updateLines(
+      lines,
+      newLines,
+      snapNewPoint?.removedLine
+    );
+    setLinesDebounced(updatedLines);
   });
   const drawnPoints = points.map((point: PointType) =>
-    Point({ key: uuidv4(), point: point })
+    MapPoint({ key: uuidv4(), point: point })
   );
   const drawnLines = lines.map((line: LineType) =>
     Line({ key: uuidv4(), line: line })
