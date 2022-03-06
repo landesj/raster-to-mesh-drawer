@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
@@ -12,7 +12,7 @@ import { Page } from "../style";
 import { LatLngBounds } from "leaflet";
 
 export const canvasSize = 1000;
-export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#FFFAF0" });
+export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
 
 let three = {
   renderer: new THREE.WebGLRenderer(),
@@ -56,10 +56,9 @@ function MeshPage() {
   const mapBounds = useRecoilValue(BoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
 
-  const ambientLight = new THREE.AmbientLight(0x404040);
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-
-  let cameraHeight = 40;
+  const pointLight = useMemo(() => {
+    return new THREE.PointLight(0xffffff, 1, 100);
+  }, []);
 
   useEffect(() => {
     // Set up canvas
@@ -71,8 +70,11 @@ function MeshPage() {
     // Create scene, add lighting
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#C8C8C8");
-    scene.add(ambientLight);
-    scene.add(directionalLight);
+
+    const sceneAmbientLight = new THREE.AmbientLight(0x404040);
+    const sceneDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    scene.add(sceneAmbientLight);
+    scene.add(sceneDirectionalLight);
 
     // Create camera
     const camera = new THREE.PerspectiveCamera(
@@ -81,7 +83,7 @@ function MeshPage() {
       0.1,
       10000
     );
-    camera.position.z = cameraHeight;
+    camera.position.z = 40;
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({
@@ -121,13 +123,19 @@ function MeshPage() {
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
     });
-    three.scene.add(directionalLight);
+    three.scene.remove(pointLight);
+    pointLight.position.set(
+      three.camera.position.x,
+      three.camera.position.y,
+      three.camera.position.z
+    );
+    three.scene.add(pointLight);
     three.renderer.render(three.scene, three.camera);
 
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [osmBuildings, mapBounds]);
+  }, [osmBuildings, mapBounds, pointLight]);
 
   useEffect(() => {
     if (
@@ -157,18 +165,23 @@ function MeshPage() {
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
-      if (polygonWithHeight.height > cameraHeight) {
-        cameraHeight = polygonWithHeight.height + 15;
-        three.camera.position.z = cameraHeight;
+      if (polygonWithHeight.height > three.camera.position.z) {
+        three.camera.position.z = polygonWithHeight.height + 20;
       }
     });
-    three.scene.add(directionalLight);
+    three.scene.remove(pointLight);
+    pointLight.position.set(
+      three.camera.position.x,
+      three.camera.position.y,
+      three.camera.position.z
+    );
+    three.scene.add(pointLight);
     three.renderer.render(three.scene, three.camera);
 
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [drawnPolygons, mapBounds]);
+  }, [drawnPolygons, mapBounds, pointLight]);
 
   useEffect(() => {
     const canvas = ref.current!;
@@ -176,6 +189,13 @@ function MeshPage() {
     let animationId: number;
     function animate() {
       animationId = requestAnimationFrame(animate);
+      three.scene.remove(pointLight);
+      pointLight.position.set(
+        three.camera.position.x,
+        three.camera.position.y,
+        three.camera.position.z
+      );
+      three.scene.add(pointLight);
       orbit.update();
       three.renderer.render(three.scene, three.camera);
     }
@@ -185,7 +205,7 @@ function MeshPage() {
     canvas.addEventListener("mouseout", () => {
       cancelAnimationFrame(animationId);
     });
-  }, []);
+  }, [pointLight]);
 
   return (
     <Page>
