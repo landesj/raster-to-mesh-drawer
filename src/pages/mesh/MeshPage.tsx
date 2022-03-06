@@ -200,10 +200,10 @@ function MeshPage() {
       orbit.update();
       three.renderer.render(three.scene, three.camera);
     }
-    canvas.addEventListener("mousedown", () => {
+    canvas.addEventListener("mouseover", () => {
       animate();
     });
-    canvas.addEventListener("mouseup", () => {
+    canvas.addEventListener("mouseout", () => {
       cancelAnimationFrame(animationId);
     });
   }, []);
