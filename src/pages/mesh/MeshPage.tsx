@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
@@ -8,7 +8,7 @@ import {
   OsmBuildingsState,
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { Page } from "../style";
+import { Button, Page } from "../style";
 import { LatLngBounds } from "leaflet";
 
 export const canvasSize = 1000;
@@ -55,6 +55,11 @@ function MeshPage() {
   const osmBuildings = useRecoilValue(OsmBuildingsState);
   const mapBounds = useRecoilValue(BoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
+  const [showOsmBuildings, setShowOsmBuildings] = useState(false);
+
+  const updateShowOsmBuildings = () => {
+    setShowOsmBuildings(!showOsmBuildings);
+  };
 
   const pointLight = useMemo(() => {
     return new THREE.PointLight(0xffffff, 1, 100);
@@ -99,7 +104,11 @@ function MeshPage() {
   }, []);
 
   useEffect(() => {
-    if (mapBounds === undefined || osmBuildings.length === 1) {
+    if (
+      mapBounds === undefined ||
+      osmBuildings.length === 1 ||
+      !showOsmBuildings
+    ) {
       return;
     }
 
@@ -135,7 +144,7 @@ function MeshPage() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [osmBuildings, mapBounds, pointLight]);
+  }, [osmBuildings, mapBounds, pointLight, showOsmBuildings]);
 
   useEffect(() => {
     if (
@@ -209,7 +218,13 @@ function MeshPage() {
 
   return (
     <Page>
-      <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
+      <canvas
+        ref={ref}
+        style={{ width: "100%", height: CANVAS_HEIGHT, padding: "10px" }}
+      />
+      {osmBuildings.length > 1 && (
+        <Button onClick={updateShowOsmBuildings}>Show OSM Buildings</Button>
+      )}
     </Page>
   );
 }

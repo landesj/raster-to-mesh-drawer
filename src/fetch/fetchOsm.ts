@@ -49,7 +49,7 @@ function getBuildingGeometry(
         coordinates.push(latLon);
       }
     });
-    height = element.tags.height !== undefined ? element.tags.height : 5;
+    height = 15;
   }
   return {
     coordinates: coordinates,
