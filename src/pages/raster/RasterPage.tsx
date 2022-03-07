@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./DrawingCanvas";
-import { fetchOSMBuildings } from "../../fetch/fetchOsm";
+import { fetchOsmBuildings } from "../../fetch/fetchOsm";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 import { Button, Input, Label, Page } from "../style";
 import { useRecoilState } from "recoil";
@@ -40,7 +40,7 @@ export function RasterPage() {
       alert("Map bounds not set, cannot order OSM");
       return;
     }
-    fetchOSMBuildings(mapBounds, setOsmBuildings);
+    fetchOsmBuildings(mapBounds, setOsmBuildings);
   }, [mapBounds, setOsmBuildings]);
 
   const changeShowRasterState = () => {

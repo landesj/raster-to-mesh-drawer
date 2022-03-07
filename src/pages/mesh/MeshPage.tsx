@@ -1,18 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
 import {
   DrawPolygonsSelector,
   BoundsState,
   OsmBuildingsState,
+  OsmRoadsState,
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Button, Page } from "../style";
 import { LatLngBounds } from "leaflet";
+import { fetchOsmRoads } from "../../fetch/fetchOsm";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
+const LINE_MATERIAL = new THREE.LineBasicMaterial({
+  color: 0x0000ff,
+});
 
 let three = {
   renderer: new THREE.WebGLRenderer(),
@@ -56,14 +61,47 @@ function MeshPage() {
   const mapBounds = useRecoilValue(BoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
   const [showOsmBuildings, setShowOsmBuildings] = useState(false);
+  const [osmRoads, setOsmRoads] = useRecoilState(OsmRoadsState);
 
   const updateShowOsmBuildings = () => {
     setShowOsmBuildings(!showOsmBuildings);
   };
 
+  const fetchAndApplyOsmRoads = () => {
+    if (mapBounds === undefined) {
+      alert("Cannot fetch OSM roads");
+    } else {
+      fetchOsmRoads(mapBounds, setOsmRoads);
+    }
+  };
+
   const pointLight = useMemo(() => {
     return new THREE.PointLight(0xffffff, 1, 100);
   }, []);
+
+  useEffect(() => {
+    if (osmRoads.length === 0 || mapBounds === undefined) return;
+    osmRoads.forEach((road) => {
+      const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
+
+      const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
+      const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
+      const vectors = road.coordinates.map(
+        (point: [number, number]) =>
+          new THREE.Vector2(
+            point[0] * latScale + latStride,
+            point[1] * lonScale + lonStride
+          )
+      );
+      const geometry = new THREE.BufferGeometry().setFromPoints(vectors);
+      const line = new THREE.Line(geometry, LINE_MATERIAL);
+      three.scene.add(line);
+    });
+    three.renderer.render(three.scene, three.camera);
+    return function cleanupScene() {
+      cleanupMeshesFromScene(three.scene);
+    };
+  }, [osmRoads, mapBounds]);
 
   useEffect(() => {
     // Set up canvas
@@ -222,6 +260,7 @@ function MeshPage() {
         ref={ref}
         style={{ width: "100%", height: CANVAS_HEIGHT, padding: "10px" }}
       />
+      <Button onClick={fetchAndApplyOsmRoads}>Fetch OSM Roads</Button>
       {osmBuildings.length > 1 && (
         <Button onClick={updateShowOsmBuildings}>Show OSM Buildings</Button>
       )}

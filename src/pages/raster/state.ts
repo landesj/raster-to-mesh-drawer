@@ -2,7 +2,7 @@ import { LatLngBounds } from "leaflet";
 import { atom, selector } from "recoil";
 import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
-import { BuildingPolygon } from "../../fetch/fetchOsm";
+import { BuildingGeometry, RoadGeometry } from "../../fetch/fetchOsm";
 import {
   fetchHeightFromRaster,
   filterDuplicateCycles,
@@ -10,8 +10,13 @@ import {
   removeOverlappingCycles,
 } from "./cycleUtils";
 
-export const OsmBuildingsState = atom<BuildingPolygon[]>({
+export const OsmBuildingsState = atom<BuildingGeometry[]>({
   key: "OsmBuildingsState",
+  default: [],
+});
+
+export const OsmRoadsState = atom<RoadGeometry[]>({
+  key: "OsmRoadsState",
   default: [],
 });
 
