@@ -11,14 +11,13 @@ import {
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Button, Page } from "../style";
-import { LatLngBounds } from "leaflet";
 import { fetchOsmRoads, fetchOsmVegetation } from "../../fetch/fetchOsm";
 import { getMapBounds } from "../../mapUtils";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
 const LINE_MATERIAL = new THREE.LineBasicMaterial({
-  color: 0x0000ff,
+  color: "#191919",
 });
 const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
 
@@ -162,7 +161,7 @@ function MeshPage() {
           )
       );
       const shape = new THREE.Shape(vectors);
-      const geometry = new THREE.ShapeGeometry(shape);
+      const geometry = new THREE.ShapeBufferGeometry(shape);
       const mesh = new THREE.Mesh(geometry, VEGETATION_MATERIAL);
       three.scene.add(mesh);
     });
@@ -195,7 +194,7 @@ function MeshPage() {
           )
       );
       const polygonShape = new THREE.Shape(osmVectors);
-      const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
+      const extrudedGeometry = new THREE.ExtrudeBufferGeometry(polygonShape, {
         depth: osmBuilding.height,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
@@ -238,7 +237,7 @@ function MeshPage() {
           )
       );
       const polygonShape = new THREE.Shape(vectors);
-      const extrudedGeometry = new THREE.ExtrudeGeometry(polygonShape, {
+      const extrudedGeometry = new THREE.ExtrudeBufferGeometry(polygonShape, {
         depth: polygonWithHeight.height,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
