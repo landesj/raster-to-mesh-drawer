@@ -13,13 +13,22 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Button, Page } from "../style";
 import { fetchOsmRoads, fetchOsmVegetation } from "../../fetch/fetchOsm";
 import { getMapBounds } from "../../mapUtils";
+import bbox from "@turf/bbox";
+import * as turf from "turf";
+import { LatLngBounds } from "leaflet";
+import { toMercator } from "@turf/projection";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
-const LINE_MATERIAL = new THREE.LineBasicMaterial({
+const ROAD_MATERIAL = new THREE.LineBasicMaterial({
   color: "#191919",
 });
 const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
+
+type ReferencePoint = {
+  referencePointLon: number;
+  referencePointLat: number;
+};
 
 let three = {
   renderer: new THREE.WebGLRenderer(),
@@ -33,6 +42,30 @@ function getNormalizationConstants(minNum: number, maxNum: number) {
   return [scaleFactor, strideFactor];
 }
 
+function getMercatorMapReferencePoint(
+  mapBounds: LatLngBounds | undefined
+): ReferencePoint | undefined {
+  if (!mapBounds) return;
+  const bounds = getMapBounds(mapBounds);
+  const polygon = turf.polygon([
+    [
+      [bounds.latMin, bounds.lonMin],
+      [bounds.latMin, bounds.lonMax],
+      [bounds.latMax, bounds.lonMax],
+      [bounds.latMax, bounds.lonMin],
+      [bounds.latMin, bounds.lonMin],
+    ],
+  ]);
+  const polygonMercator = toMercator(polygon);
+  const polygonBbox = bbox(polygonMercator);
+  const referencePointLon = (polygonBbox[3] + polygonBbox[1]) / 2;
+  const referencePointLat = (polygonBbox[2] + polygonBbox[0]) / 2;
+  return {
+    referencePointLat: referencePointLat,
+    referencePointLon: referencePointLon,
+  };
+}
+
 function cleanupMeshesFromScene(scene: THREE.Scene) {
   for (let i = scene.children.length - 1; i >= 0; i--) {
     if (scene.children[i].type === "Mesh") {
@@ -40,11 +73,9 @@ function cleanupMeshesFromScene(scene: THREE.Scene) {
       mesh.geometry.dispose();
       // TODO: How to dispose of material
       scene.remove(mesh);
-    }
-    if (scene.children[i].type === "Line") {
+    } else if (scene.children[i].type === "Line") {
       const line: THREE.Line = scene.children[i] as THREE.Line;
       line.geometry.dispose();
-      // TODO: How to dispose of material
       scene.remove(line);
     }
   }
@@ -58,6 +89,8 @@ function MeshPage() {
   const [showOsmBuildings, setShowOsmBuildings] = useState(false);
   const [osmRoads, setOsmRoads] = useRecoilState(OsmRoadsState);
   const [osmVegetation, setOsmVegetation] = useRecoilState(OsmVegetationState);
+
+  const referencePoint = getMercatorMapReferencePoint(mapBounds);
 
   const updateShowOsmBuildings = () => {
     setShowOsmBuildings(!showOsmBuildings);
@@ -106,7 +139,7 @@ function MeshPage() {
       0.1,
       10000
     );
-    camera.position.z = 40;
+    camera.position.z = 60;
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({
@@ -122,30 +155,25 @@ function MeshPage() {
   }, []);
 
   useEffect(() => {
-    if (osmRoads.length === 0 || mapBounds === undefined) return;
+    if (osmRoads.length === 0 || referencePoint === undefined) return;
     osmRoads.forEach((road) => {
-      const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
-
-      const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
-      const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
-      const vectors = road.coordinates.map(
-        (point: [number, number]) =>
+      const vectors = road.geometry.coordinates.map(
+        (point) =>
           new THREE.Vector2(
-            point[0] * latScale + latStride,
-            point[1] * lonScale + lonStride
+            point[1] - referencePoint.referencePointLon,
+            point[0] - referencePoint.referencePointLat
           )
       );
       const geometry = new THREE.BufferGeometry().setFromPoints(vectors);
-      const line = new THREE.Line(geometry, LINE_MATERIAL);
+      const line = new THREE.Line(geometry, ROAD_MATERIAL);
       three.scene.add(line);
     });
     three.renderer.render(three.scene, three.camera);
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [osmRoads, mapBounds]);
+  }, [osmRoads, referencePoint]);
 
-  console.log(osmVegetation);
   useEffect(() => {
     if (osmVegetation.length === 0 || mapBounds === undefined) return;
     osmVegetation.forEach((vegetation) => {
@@ -156,8 +184,8 @@ function MeshPage() {
       const vectors = vegetation.coordinates.map(
         (point: [number, number]) =>
           new THREE.Vector2(
-            point[0] * latScale + latStride,
-            point[1] * lonScale + lonStride
+            point[1] * lonScale + lonStride,
+            point[0] * latScale + latStride
           )
       );
       const shape = new THREE.Shape(vectors);
@@ -173,29 +201,24 @@ function MeshPage() {
 
   useEffect(() => {
     if (
-      mapBounds === undefined ||
+      referencePoint === undefined ||
       osmBuildings.length === 1 ||
       !showOsmBuildings
     ) {
       return;
     }
 
-    const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
-
-    const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
-    const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
-
     osmBuildings.forEach((osmBuilding) => {
       const osmVectors = osmBuilding.coordinates.map(
         (point) =>
           new THREE.Vector2(
-            point[0] * latScale + latStride,
-            point[1] * lonScale + lonStride
+            point[1] - referencePoint.referencePointLon,
+            point[0] - referencePoint.referencePointLat
           )
       );
       const polygonShape = new THREE.Shape(osmVectors);
       const extrudedGeometry = new THREE.ExtrudeBufferGeometry(polygonShape, {
-        depth: osmBuilding.height,
+        depth: 10,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
       three.scene.add(buildingMesh);
@@ -212,28 +235,23 @@ function MeshPage() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [osmBuildings, mapBounds, pointLight, showOsmBuildings]);
+  }, [osmBuildings, referencePoint, pointLight, showOsmBuildings]);
 
   useEffect(() => {
     if (
-      mapBounds === undefined ||
+      referencePoint === undefined ||
       drawnPolygons === undefined ||
       drawnPolygons.length === 0
     ) {
       return;
     }
 
-    const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
-
-    const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
-    const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
-
     drawnPolygons.forEach((polygonWithHeight) => {
       const vectors = polygonWithHeight.polygon.geometry.coordinates[0].map(
         (point) =>
           new THREE.Vector2(
-            point[0] * latScale + latStride,
-            point[1] * lonScale + lonStride
+            point[1] - referencePoint.referencePointLon,
+            point[0] - referencePoint.referencePointLat
           )
       );
       const polygonShape = new THREE.Shape(vectors);
@@ -258,7 +276,7 @@ function MeshPage() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [drawnPolygons, mapBounds, pointLight]);
+  }, [drawnPolygons, referencePoint, pointLight]);
 
   useEffect(() => {
     const canvas = ref.current!;

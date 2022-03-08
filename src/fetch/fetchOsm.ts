@@ -1,5 +1,8 @@
+import { toMercator } from "@turf/projection";
+import { Feature, GeoJsonProperties, LineString, Polygon } from "geojson";
 import { LatLngBounds } from "leaflet";
 import { getMapBounds } from "../mapUtils";
+import * as turf from "turf";
 
 const HIGHWAY_WHITELIST = [
   "residential",
@@ -24,6 +27,8 @@ export type BuildingGeometry = {
   coordinates: Coordinates;
   height: number | undefined;
 };
+
+export type RoadGeometry = Feature<LineString, GeoJsonProperties>;
 
 export type Geometry = {
   coordinates: Coordinates;
@@ -163,7 +168,7 @@ export async function fetchOsmBuildings(
 
 export async function fetchOsmRoads(
   bounds: LatLngBounds,
-  setOsmRoads: React.Dispatch<React.SetStateAction<Geometry[]>>
+  setOsmRoads: React.Dispatch<React.SetStateAction<RoadGeometry[]>>
 ) {
   const elements = await fetchDataFromOsm(OsmType.ROAD, bounds).then(
     (response: OSMResponse) => response.elements
@@ -178,7 +183,10 @@ export async function fetchOsmRoads(
   const nonEmptyRoadElements = roadElements.filter(
     (road) => road.coordinates.length > 0
   );
-  setOsmRoads(nonEmptyRoadElements);
+  const roadLinesMercator = nonEmptyRoadElements.map(({ coordinates }) =>
+    toMercator(turf.lineString(coordinates))
+  );
+  setOsmRoads(roadLinesMercator);
 }
 
 export async function fetchOsmVegetation(

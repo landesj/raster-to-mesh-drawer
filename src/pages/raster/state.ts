@@ -2,15 +2,21 @@ import { LatLngBounds } from "leaflet";
 import { atom, selector } from "recoil";
 import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
-import { BuildingGeometry, Geometry } from "../../fetch/fetchOsm";
+import { BuildingGeometry, Geometry, RoadGeometry } from "../../fetch/fetchOsm";
 import {
   fetchHeightFromRaster,
   filterDuplicateCycles,
   findCycles,
   removeOverlappingCycles,
 } from "./cycleUtils";
+import { toMercator } from "@turf/projection";
 
 export const OsmBuildingsState = atom<BuildingGeometry[]>({
+  key: "OsmBuildingsState",
+  default: [],
+});
+
+export const OsmBuildingsLatLngState = atom<Geometry[]>({
   key: "OsmBuildingsState",
   default: [],
 });
@@ -20,7 +26,7 @@ export const OsmVegetationState = atom<Geometry[]>({
   default: [],
 });
 
-export const OsmRoadsState = atom<Geometry[]>({
+export const OsmRoadsState = atom<RoadGeometry[]>({
   key: "OsmRoadsState",
   default: [],
 });
@@ -76,7 +82,15 @@ export const DrawPolygonsSelector = selector({
       distinctPolygons,
       georaster
     );
-    return polygonsWithHeight;
+    const polygonsWithHeightTranslated = polygonsWithHeight.map(
+      ({ polygon, height }) => {
+        return {
+          polygon: toMercator(polygon),
+          height: height,
+        };
+      }
+    );
+    return polygonsWithHeightTranslated;
   },
 });
 
