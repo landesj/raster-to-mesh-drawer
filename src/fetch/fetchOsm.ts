@@ -25,10 +25,10 @@ type Coordinates = Point[];
 
 export type BuildingGeometry = {
   coordinates: Coordinates;
-  height: number | undefined;
 };
 
 export type RoadGeometry = Feature<LineString, GeoJsonProperties>;
+export type PolygonGeometry = Feature<Polygon, GeoJsonProperties>;
 
 export type Geometry = {
   coordinates: Coordinates;
@@ -61,12 +61,11 @@ type OSMResponse = {
   elements: OsmElement[];
 };
 
-function getBuildingGeometry(
+function getGeometry(
   element: OsmElement,
   nodeIdToLatLon: Map<number, [number, number]>
 ) {
   let coordinates: Coordinates = [];
-  let height;
   if (element.type === "way") {
     element.nodes.forEach((value) => {
       const latLon = nodeIdToLatLon.get(value);
@@ -74,11 +73,9 @@ function getBuildingGeometry(
         coordinates.push(latLon);
       }
     });
-    height = 15;
   }
   return {
     coordinates: coordinates,
-    height: height,
   };
 }
 
@@ -146,11 +143,11 @@ async function fetchOsmPolygonsFromBounds(bounds: LatLngBounds, type: OsmType) {
   elements.forEach((node) => {
     if (node.type === "node") nodeIdToLatLon.set(node.id, [node.lat, node.lon]);
   });
-  const buildingElements = elements.map((element) => {
-    return getBuildingGeometry(element, nodeIdToLatLon);
+  const geometries = elements.map((element) => {
+    return getGeometry(element, nodeIdToLatLon);
   });
-  const nonEmptyBuildingElements = buildingElements.filter(
-    (building) => building.coordinates.length > 0
+  const nonEmptyBuildingElements = geometries.filter(
+    (geometry) => geometry.coordinates.length > 0
   );
   return nonEmptyBuildingElements;
 }
@@ -191,11 +188,14 @@ export async function fetchOsmRoads(
 
 export async function fetchOsmVegetation(
   bounds: LatLngBounds,
-  setOsmVegetation: React.Dispatch<React.SetStateAction<Geometry[]>>
+  setOsmVegetation: React.Dispatch<React.SetStateAction<PolygonGeometry[]>>
 ) {
   const vegetationGeometries = await fetchOsmPolygonsFromBounds(
     bounds,
     OsmType.PARK
   );
-  setOsmVegetation(vegetationGeometries);
+  const vegetationGeometriesMercator = vegetationGeometries.map(
+    ({ coordinates }) => toMercator(turf.polygon([coordinates]))
+  );
+  setOsmVegetation(vegetationGeometriesMercator);
 }

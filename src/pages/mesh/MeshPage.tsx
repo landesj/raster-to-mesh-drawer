@@ -175,17 +175,13 @@ function MeshPage() {
   }, [osmRoads, referencePoint]);
 
   useEffect(() => {
-    if (osmVegetation.length === 0 || mapBounds === undefined) return;
+    if (osmVegetation.length === 0 || referencePoint === undefined) return;
     osmVegetation.forEach((vegetation) => {
-      const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
-
-      const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
-      const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
-      const vectors = vegetation.coordinates.map(
-        (point: [number, number]) =>
+      const vectors = vegetation.geometry.coordinates[0].map(
+        (point) =>
           new THREE.Vector2(
-            point[1] * lonScale + lonStride,
-            point[0] * latScale + latStride
+            point[1] - referencePoint.referencePointLon,
+            point[0] - referencePoint.referencePointLat
           )
       );
       const shape = new THREE.Shape(vectors);
@@ -197,7 +193,7 @@ function MeshPage() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene);
     };
-  }, [osmVegetation, mapBounds]);
+  }, [osmVegetation, referencePoint, mapBounds]);
 
   useEffect(() => {
     if (
