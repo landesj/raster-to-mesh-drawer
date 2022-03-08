@@ -6,11 +6,7 @@ import { fetchOsmBuildings } from "../../fetch/fetchOsm";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 import { Button, Input, Label, Page } from "../style";
 import { useRecoilState } from "recoil";
-import {
-  BoundsState,
-  OsmBuildingsLatLngState,
-  OsmBuildingsState,
-} from "./state";
+import { BoundsState, OsmBuildingsState } from "./state";
 
 export const CANVAS_HEIGHT = "90vh";
 
