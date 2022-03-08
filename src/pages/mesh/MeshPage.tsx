@@ -7,17 +7,20 @@ import {
   BoundsState,
   OsmBuildingsState,
   OsmRoadsState,
+  OsmVegetationState,
 } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Button, Page } from "../style";
 import { LatLngBounds } from "leaflet";
-import { fetchOsmRoads } from "../../fetch/fetchOsm";
+import { fetchOsmRoads, fetchOsmVegetation } from "../../fetch/fetchOsm";
+import { getMapBounds } from "../../mapUtils";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
 const LINE_MATERIAL = new THREE.LineBasicMaterial({
   color: 0x0000ff,
 });
+const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
 
 let three = {
   renderer: new THREE.WebGLRenderer(),
@@ -31,19 +34,6 @@ function getNormalizationConstants(minNum: number, maxNum: number) {
   return [scaleFactor, strideFactor];
 }
 
-function getMapBounds(mapBounds: LatLngBounds) {
-  const latMax = mapBounds.getNorthEast().lat;
-  const latMin = mapBounds.getSouthWest().lat;
-  const lonMin = mapBounds.getSouthWest().lng;
-  const lonMax = mapBounds.getNorthEast().lng;
-  return {
-    latMin: latMin,
-    latMax: latMax,
-    lonMin: lonMin,
-    lonMax: lonMax,
-  };
-}
-
 function cleanupMeshesFromScene(scene: THREE.Scene) {
   for (let i = scene.children.length - 1; i >= 0; i--) {
     if (scene.children[i].type === "Mesh") {
@@ -51,6 +41,12 @@ function cleanupMeshesFromScene(scene: THREE.Scene) {
       mesh.geometry.dispose();
       // TODO: How to dispose of material
       scene.remove(mesh);
+    }
+    if (scene.children[i].type === "Line") {
+      const line: THREE.Line = scene.children[i] as THREE.Line;
+      line.geometry.dispose();
+      // TODO: How to dispose of material
+      scene.remove(line);
     }
   }
 }
@@ -62,6 +58,7 @@ function MeshPage() {
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
   const [showOsmBuildings, setShowOsmBuildings] = useState(false);
   const [osmRoads, setOsmRoads] = useRecoilState(OsmRoadsState);
+  const [osmVegetation, setOsmVegetation] = useRecoilState(OsmVegetationState);
 
   const updateShowOsmBuildings = () => {
     setShowOsmBuildings(!showOsmBuildings);
@@ -75,33 +72,17 @@ function MeshPage() {
     }
   };
 
+  const fetchAndApplyOsmVegetation = () => {
+    if (mapBounds === undefined) {
+      alert("Cannot fetch OSM vegetation");
+    } else {
+      fetchOsmVegetation(mapBounds, setOsmVegetation);
+    }
+  };
+
   const pointLight = useMemo(() => {
     return new THREE.PointLight(0xffffff, 1, 100);
   }, []);
-
-  useEffect(() => {
-    if (osmRoads.length === 0 || mapBounds === undefined) return;
-    osmRoads.forEach((road) => {
-      const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
-
-      const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
-      const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
-      const vectors = road.coordinates.map(
-        (point: [number, number]) =>
-          new THREE.Vector2(
-            point[0] * latScale + latStride,
-            point[1] * lonScale + lonStride
-          )
-      );
-      const geometry = new THREE.BufferGeometry().setFromPoints(vectors);
-      const line = new THREE.Line(geometry, LINE_MATERIAL);
-      three.scene.add(line);
-    });
-    three.renderer.render(three.scene, three.camera);
-    return function cleanupScene() {
-      cleanupMeshesFromScene(three.scene);
-    };
-  }, [osmRoads, mapBounds]);
 
   useEffect(() => {
     // Set up canvas
@@ -140,6 +121,56 @@ function MeshPage() {
     };
     renderer.render(scene, camera);
   }, []);
+
+  useEffect(() => {
+    if (osmRoads.length === 0 || mapBounds === undefined) return;
+    osmRoads.forEach((road) => {
+      const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
+
+      const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
+      const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
+      const vectors = road.coordinates.map(
+        (point: [number, number]) =>
+          new THREE.Vector2(
+            point[0] * latScale + latStride,
+            point[1] * lonScale + lonStride
+          )
+      );
+      const geometry = new THREE.BufferGeometry().setFromPoints(vectors);
+      const line = new THREE.Line(geometry, LINE_MATERIAL);
+      three.scene.add(line);
+    });
+    three.renderer.render(three.scene, three.camera);
+    return function cleanupScene() {
+      cleanupMeshesFromScene(three.scene);
+    };
+  }, [osmRoads, mapBounds]);
+
+  console.log(osmVegetation);
+  useEffect(() => {
+    if (osmVegetation.length === 0 || mapBounds === undefined) return;
+    osmVegetation.forEach((vegetation) => {
+      const { latMin, latMax, lonMin, lonMax } = getMapBounds(mapBounds);
+
+      const [latScale, latStride] = getNormalizationConstants(latMin, latMax);
+      const [lonScale, lonStride] = getNormalizationConstants(lonMin, lonMax);
+      const vectors = vegetation.coordinates.map(
+        (point: [number, number]) =>
+          new THREE.Vector2(
+            point[0] * latScale + latStride,
+            point[1] * lonScale + lonStride
+          )
+      );
+      const shape = new THREE.Shape(vectors);
+      const geometry = new THREE.ShapeGeometry(shape);
+      const mesh = new THREE.Mesh(geometry, VEGETATION_MATERIAL);
+      three.scene.add(mesh);
+    });
+    three.renderer.render(three.scene, three.camera);
+    return function cleanupScene() {
+      cleanupMeshesFromScene(three.scene);
+    };
+  }, [osmVegetation, mapBounds]);
 
   useEffect(() => {
     if (
@@ -260,10 +291,13 @@ function MeshPage() {
         ref={ref}
         style={{ width: "100%", height: CANVAS_HEIGHT, padding: "10px" }}
       />
-      <Button onClick={fetchAndApplyOsmRoads}>Fetch OSM Roads</Button>
-      {osmBuildings.length > 1 && (
-        <Button onClick={updateShowOsmBuildings}>Show OSM Buildings</Button>
-      )}
+      <div>
+        <Button onClick={fetchAndApplyOsmRoads}>Fetch OSM Roads</Button>
+        <Button onClick={fetchAndApplyOsmVegetation}>Fetch OSM Parks</Button>
+        {osmBuildings.length > 1 && (
+          <Button onClick={updateShowOsmBuildings}>Show OSM Buildings</Button>
+        )}
+      </div>
     </Page>
   );
 }
