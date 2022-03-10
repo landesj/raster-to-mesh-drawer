@@ -3,18 +3,18 @@ import { atom, selector } from "recoil";
 import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
 import {
-  BuildingGeometry,
-  Geometry,
-  PolygonGeometry,
-  RoadGeometry,
-} from "../../fetch/fetchOsm";
-import {
   fetchHeightFromRaster,
   filterDuplicateCycles,
   findCycles,
   removeOverlappingCycles,
 } from "./cycleUtils";
 import { toMercator } from "@turf/projection";
+import {
+  BuildingGeometry,
+  Geometry,
+  PolygonGeometry,
+  RoadGeometry,
+} from "../../fetch/types";
 
 export const OsmBuildingsState = atom<BuildingGeometry[]>({
   key: "OsmBuildingsState",

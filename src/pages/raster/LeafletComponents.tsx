@@ -3,11 +3,11 @@ import { LatLngBounds } from "leaflet";
 import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import { Polygon, useMap, useMapEvent } from "react-leaflet";
-import { Geometry } from "../../fetch/fetchOsm";
 import { v4 as uuidv4 } from "uuid";
 import parseGeoraster from "georaster";
 import { useSetRecoilState } from "recoil";
 import { GeoTiffState } from "./state";
+import { Geometry } from "../../fetch/types";
 
 type ImportProps = {
   rasterArrayBuffer: ArrayBuffer | null;

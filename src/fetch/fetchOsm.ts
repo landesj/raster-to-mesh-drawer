@@ -1,8 +1,17 @@
 import { toMercator } from "@turf/projection";
-import { Feature, GeoJsonProperties, LineString, Polygon } from "geojson";
 import { LatLngBounds } from "leaflet";
 import { getMapBounds } from "../mapUtils";
 import * as turf from "turf";
+import {
+  BuildingGeometry,
+  Coordinates,
+  OsmElement,
+  OsmFetchError,
+  OSMResponse,
+  OsmType,
+  PolygonGeometry,
+  RoadGeometry,
+} from "./types";
 
 const HIGHWAY_WHITELIST = [
   "residential",
@@ -13,53 +22,32 @@ const HIGHWAY_WHITELIST = [
   "motorway",
 ];
 
-enum OsmType {
-  ROAD = "highway",
-  BUILDING = "building",
-  PARK = "park",
+async function fetchOsmData(url: string) {
+  const responseJson = await fetch(url).then((response) => {
+    if (response.status === 200) {
+      alert("Unable to fetch OSM data for this location.");
+      throw new OsmFetchError(response.statusText);
+    }
+    return response.json();
+  });
+  if (responseJson.elements.length === 0 && responseJson.remark) {
+    alert(`Unable to fetch OSM data for this location: ${responseJson.remark}`);
+    throw new OsmFetchError(responseJson.remark);
+  }
+  return responseJson;
 }
 
-type Point = [number, number];
+async function fetchParksFromOsm(bounds: LatLngBounds) {
+  const { latMin, latMax, lonMin, lonMax } = getMapBounds(bounds);
+  const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['leisure'='park'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
+  return fetchOsmData(requestUrl);
+}
 
-type Coordinates = Point[];
-
-export type BuildingGeometry = {
-  coordinates: Coordinates;
-};
-
-export type RoadGeometry = Feature<LineString, GeoJsonProperties>;
-export type PolygonGeometry = Feature<Polygon, GeoJsonProperties>;
-
-export type Geometry = {
-  coordinates: Coordinates;
-};
-
-type OsmNode = {
-  type: "node";
-  id: number;
-  lat: number;
-  lon: number;
-};
-
-type RoadTags = {
-  highway: string;
-};
-
-type OsmWay = {
-  type: "way";
-  id: number;
-  nodes: number[];
-  tags: RoadTags;
-};
-
-type OsmElement = OsmWay | OsmNode;
-
-type OSMResponse = {
-  version: number;
-  generator: string;
-  osm3s: { timestamp_osm_base: string; copyright: string };
-  elements: OsmElement[];
-};
+async function fetchDataFromOsm(dataType: string, bounds: LatLngBounds) {
+  const { latMin, latMax, lonMin, lonMax } = getMapBounds(bounds);
+  const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['${dataType}'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
+  return fetchOsmData(requestUrl);
+}
 
 function getGeometry(
   element: OsmElement,
@@ -100,32 +88,6 @@ function getRoadGeometry(
   return {
     coordinates: coordinates,
   };
-}
-
-async function fetchParksFromOsm(bounds: LatLngBounds) {
-  const { latMin, latMax, lonMin, lonMax } = getMapBounds(bounds);
-  const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['leisure'='park'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
-  const response = await fetch(requestUrl).then((response) => {
-    if (response.status !== 200) {
-      alert("Unable to fetch OSM data for this location.");
-      throw new Error(response.statusText);
-    }
-    return response.json();
-  });
-  return response;
-}
-
-async function fetchDataFromOsm(dataType: string, bounds: LatLngBounds) {
-  const { latMin, latMax, lonMin, lonMax } = getMapBounds(bounds);
-  const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['${dataType}'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
-  const response = await fetch(requestUrl).then((response) => {
-    if (response.status !== 200) {
-      alert("Unable to fetch OSM data for this location.");
-      throw new Error(response.statusText);
-    }
-    return response.json();
-  });
-  return response;
 }
 
 async function fetchOsmPolygonsFromBounds(bounds: LatLngBounds, type: OsmType) {
