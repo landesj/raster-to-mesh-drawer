@@ -5,7 +5,7 @@ import { Line, LineType } from "../../assets/Line";
 import { MapPoint, PointType } from "../../assets/Point";
 import { v4 as uuidv4 } from "uuid";
 import * as turf from "turf";
-import { useRecoilState } from "recoil";
+import { atom, useRecoilState } from "recoil";
 import { DrawnLinesState, DrawnPointsState } from "./state";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
 import { Feature, GeoJsonProperties, Point } from "geojson";
@@ -101,16 +101,31 @@ function findSnappingPoint(
   }
 }
 
+type DrawingAction = {
+  action: "add" | "remove";
+  geometry: PointType | LineType;
+};
+
+const ActionsHistoryState = atom<DrawingAction[][]>({
+  key: "ActionsHistoryState",
+  default: [],
+});
+
 export function DrawingCanvas() {
   const [points, setPoints] = useRecoilState(DrawnPointsState);
   const [lines, setLines] = useRecoilState(DrawnLinesState);
+  const [history, setHistory] = useRecoilState(ActionsHistoryState);
   const [latestPoint, setLatestPoint] = useState<PointType | undefined>();
 
   const setPointsDebounced = debounce(setPoints, 100);
   const setLinesDebounced = debounce(setLines, 100);
   const setLatestPointDebounced = debounce(setLatestPoint, 100);
+  const setHistoryDebounced = debounce(setHistory, 100);
+
+  console.log(history);
 
   useMapEvent("click", (event) => {
+    let actions: DrawingAction[] = [];
     let newPoint = {
       lat: event.latlng.lat,
       lng: event.latlng.lng,
@@ -126,6 +141,10 @@ export function DrawingCanvas() {
       setLatestPointDebounced(newPoint);
     }
     const newPoints = [...points, newPoint];
+    actions.push({
+      action: "add",
+      geometry: newPoint,
+    });
 
     setPointsDebounced(newPoints);
     if (latestPoint) {
@@ -141,12 +160,20 @@ export function DrawingCanvas() {
       newLines = [...newLines, ...snapNewPoint.newLines];
     }
 
+    newLines.forEach((newLine) =>
+      actions.push({ action: "add", geometry: newLine })
+    );
+    if (snapNewPoint && snapNewPoint.removedLine) {
+      actions.push({ action: "remove", geometry: snapNewPoint.removedLine });
+    }
+
     const updatedLines = _updateLines(
       lines,
       newLines,
       snapNewPoint?.removedLine
     );
     setLinesDebounced(updatedLines);
+    setHistoryDebounced([...history, actions]);
   });
   const drawnPoints = points.map((point: PointType) =>
     MapPoint({ key: uuidv4(), point: point })
