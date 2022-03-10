@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmVegetationState } from "../raster/state";
-import { fetchOsmVegetation } from "../../fetch/fetchOsm";
-import { getMercatorMapReferencePoint } from "./utils";
-import { cleanupMeshesFromScene, three } from "./MeshPage";
-import { Button } from "../style";
+import { BoundsState, OsmVegetationState } from "../../raster/state";
+import { fetchOsmVegetation } from "../../../fetch/fetchOsm";
+import { getMercatorMapReferencePoint } from "../utils";
+import { cleanupMeshesFromScene, three } from "../MeshPage";
+import { Button } from "../../style";
 
 const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
 

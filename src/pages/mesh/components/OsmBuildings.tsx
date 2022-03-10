@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmBuildingsState } from "../raster/state";
-import { Button } from "../style";
-import { getMercatorMapReferencePoint } from "./utils";
-import { cleanupMeshesFromScene, MATERIAL, three } from "./MeshPage";
+import { BoundsState, OsmBuildingsState } from "../../raster/state";
+import { Button } from "../../style";
+import { getMercatorMapReferencePoint } from "../utils";
+import { cleanupMeshesFromScene, MATERIAL, three } from "../MeshPage";
 
 export function OsmBuildings() {
   const mapBounds = useRecoilValue(BoundsState);

@@ -1,6 +1,6 @@
-import { OsmBuildings } from "./OsmBuildings";
-import { Roads } from "./Roads";
-import { Vegetation } from "./Vegetation";
+import { OsmBuildings } from "./components/OsmBuildings";
+import { Roads } from "./components/Roads";
+import { Vegetation } from "./components/Vegetation";
 
 export function Navbar() {
   return (

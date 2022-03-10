@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmRoadsState } from "../raster/state";
-import { Button } from "../style";
-import { fetchOsmRoads } from "../../fetch/fetchOsm";
-import { getMercatorMapReferencePoint } from "./utils";
-import { cleanupMeshesFromScene, three } from "./MeshPage";
+import { BoundsState, OsmRoadsState } from "../../raster/state";
+import { Button } from "../../style";
+import { fetchOsmRoads } from "../../../fetch/fetchOsm";
+import { getMercatorMapReferencePoint } from "../utils";
+import { cleanupMeshesFromScene, three } from "../MeshPage";
 
 const ROAD_MATERIAL = new THREE.LineBasicMaterial({
   color: "#191919",
