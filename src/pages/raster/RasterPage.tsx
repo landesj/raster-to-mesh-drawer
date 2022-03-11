@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { DrawingCanvas } from "./DrawingCanvas";
+import { DrawingCanvas } from "./drawingCanvas/DrawingCanvas";
 import { fetchOsmBuildings } from "../../fetch/fetchOsm";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 import { Button, Input, Label, Page } from "../style";
