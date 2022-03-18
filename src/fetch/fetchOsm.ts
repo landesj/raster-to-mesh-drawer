@@ -24,7 +24,7 @@ const HIGHWAY_WHITELIST = [
 
 async function fetchOsmData(url: string) {
   const responseJson = await fetch(url).then((response) => {
-    if (response.status === 200) {
+    if (response.status !== 200) {
       alert("Unable to fetch OSM data for this location.");
       throw new OsmFetchError(response.statusText);
     }
