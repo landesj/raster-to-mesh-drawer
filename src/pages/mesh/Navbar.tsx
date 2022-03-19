@@ -1,11 +1,12 @@
+import { Navbar } from "../style";
 import { OsmBuildings } from "./components/OsmBuildings";
 import { Roads } from "./components/Roads";
 import { Vegetation } from "./components/Vegetation";
 
-export function Navbar() {
+export function MeshNavbar() {
   return (
-    <div>
+    <Navbar>
       <Vegetation /> <Roads /> <OsmBuildings />
-    </div>
+    </Navbar>
   );
 }

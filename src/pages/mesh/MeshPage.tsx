@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
-import { BoundsState } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Page } from "../style";
-import { Navbar } from "./Navbar";
+import { MeshNavbar } from "./Navbar";
 import { DrawnBuildings } from "./components/DrawnBuildings";
 
 export const canvasSize = 1000;
@@ -103,12 +101,9 @@ function MeshPage() {
 
   return (
     <Page>
-      <canvas
-        ref={ref}
-        style={{ width: "100%", height: CANVAS_HEIGHT, padding: "10px" }}
-      />
+      <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
       <DrawnBuildings />
-      <Navbar />
+      <MeshNavbar />
     </Page>
   );
 }
