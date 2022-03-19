@@ -40,7 +40,7 @@ export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
     parseGeoraster(rasterArrayBuffer).then((georaster: any) => {
       const geoTiff = new GeoRasterLayer({
         georaster: georaster,
-        debugLevel: 1,
+        opacity: 0.95,
       });
       leafletMap.addLayer(geoTiff);
       leafletMap.fitBounds(geoTiff.getBounds());
