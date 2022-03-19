@@ -34,10 +34,9 @@ export function cleanupMeshesFromScene(scene: THREE.Scene) {
 
 function MeshPage() {
   const ref = useRef<HTMLCanvasElement>(null);
-  const mapBounds = useRecoilValue(BoundsState);
 
   const pointLight = useMemo(() => {
-    return new THREE.PointLight(0xffffff, 1, 100);
+    return new THREE.PointLight(0xffffff, 1);
   }, []);
 
   useEffect(() => {
