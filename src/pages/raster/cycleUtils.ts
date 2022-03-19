@@ -2,9 +2,10 @@ import * as turf from "turf";
 import booleanContains from "@turf/boolean-contains";
 import { Feature, GeoJsonProperties, Polygon } from "geojson";
 
+type TurfPolygon = Feature<Polygon, GeoJsonProperties>;
 type Cycle = [number, number][];
 type PolygonWithHeight = {
-  polygon: Feature<Polygon, GeoJsonProperties>;
+  polygon: TurfPolygon;
   height: number;
 };
 
@@ -23,16 +24,24 @@ function _stringToPoint(string: string): [number, number] {
 // Test these functions
 export function findCycles(adjacencies: Map<string, [number, number][]>) {
   let cycles: Cycle[] = [];
+
   adjacencies.forEach((dstPoints, currentPointString) => {
     const currentPoint = _stringToPoint(currentPointString);
     dstPoints.forEach((dstPoint) => {
       let visitedPoints = new Set<string>();
       visitedPoints.add(currentPointString);
-      let queue = [{ points: [currentPoint, dstPoint], depth: 1 }];
+      visitedPoints.add(dstPoint.toString());
+      let queue = [
+        {
+          points: [currentPoint, dstPoint],
+          visitedPoints: visitedPoints,
+          depth: 1,
+        },
+      ];
       while (queue.length > 0) {
-        const { points, depth } = queue[0];
+        console.log(queue);
+        const { points, visitedPoints, depth } = queue[0];
         const queuePoint = points[points.length - 1];
-        visitedPoints.add(queuePoint.toString());
         queue = queue.slice(1);
         let queueAdjacencies = adjacencies.get(queuePoint.toString());
         if (queueAdjacencies) {
@@ -40,8 +49,11 @@ export function findCycles(adjacencies: Map<string, [number, number][]>) {
             if (_pointsEqual(currentPoint, adjacentPoint) && depth !== 1) {
               cycles.push([...points]);
             } else if (!visitedPoints.has(adjacentPoint.toString())) {
+              const newVisitedPoints = new Set(visitedPoints);
+              newVisitedPoints.add(adjacentPoint.toString());
               queue.push({
                 points: [...points, adjacentPoint],
+                visitedPoints: newVisitedPoints,
                 depth: depth + 1,
               });
             }
@@ -103,7 +115,12 @@ export function removeOverlappingCycles(
   for (let startIndex = 0; startIndex < polygons.length; startIndex += 1) {
     for (let endIndex = 0; endIndex < polygons.length; endIndex += 1) {
       if (startIndex === endIndex) continue;
-      if (booleanContains(polygons[startIndex], polygons[endIndex])) {
+      const surfacePoint = turf.pointOnSurface(polygons[endIndex]);
+      if (
+        booleanContains(polygons[startIndex], polygons[endIndex]) &&
+        booleanContains(polygons[startIndex], surfacePoint)
+      ) {
+        console.log("We in there dog");
         removableIndices.push(startIndex);
       }
     }
