@@ -1,6 +1,7 @@
 import * as turf from "turf";
 import booleanContains from "@turf/boolean-contains";
 import { Feature, GeoJsonProperties, Polygon } from "geojson";
+import { LineType } from "../../assets/Line";
 
 type TurfPolygon = Feature<Polygon, GeoJsonProperties>;
 type Cycle = [number, number][];
@@ -8,6 +9,91 @@ type PolygonWithHeight = {
   polygon: TurfPolygon;
   height: number;
 };
+type PathQueue = { path: string[] };
+
+export class Graph {
+  nodes: string[];
+  edges: [string, string][];
+  edgesLookup: string[];
+  adjacencies: Map<string, string[]>;
+
+  constructor() {
+    this.nodes = [];
+    this.edges = [];
+    this.edgesLookup = [];
+    this.adjacencies = new Map<string, string[]>();
+  }
+
+  addNode(node: string) {
+    if (!this.nodes.includes(node)) {
+      this.nodes.push(node);
+    }
+  }
+
+  addEdge(edge: [string, string]) {
+    const [srcNode, dstNode] = edge;
+    this.addNode(srcNode);
+    this.addNode(dstNode);
+    if (
+      !this.edgesLookup.includes(edge.toString()) &&
+      !this.edgesLookup.includes([dstNode, srcNode].toString())
+    ) {
+      this.edges.push(edge);
+      this.edgesLookup.push(edge.toString());
+
+      const srcNodeAdjacencies = this.adjacencies.get(srcNode);
+      const dstNodeAdjacencies = this.adjacencies.get(dstNode);
+
+      if (srcNodeAdjacencies) {
+        srcNodeAdjacencies.push(dstNode);
+        this.adjacencies.set(srcNode, srcNodeAdjacencies);
+      } else {
+        this.adjacencies.set(srcNode, [dstNode]);
+      }
+
+      if (dstNodeAdjacencies) {
+        dstNodeAdjacencies.push(srcNode);
+        this.adjacencies.set(dstNode, dstNodeAdjacencies);
+      } else {
+        this.adjacencies.set(dstNode, [srcNode]);
+      }
+    }
+  }
+
+  createGraphFromListOfLines(lines: LineType[]) {
+    lines.forEach((line: LineType) => {
+      const srcNode = [line.latSrc, line.lngSrc].toString();
+      const dstNode = [line.latDst, line.lngDst].toString();
+      if (!this.nodes.includes(srcNode)) {
+        this.nodes.push(srcNode);
+      }
+      if (!this.nodes.includes(dstNode)) {
+        this.nodes.push(dstNode);
+      }
+
+      const newEdge: [string, string] = [srcNode, dstNode];
+      this.edges.push(newEdge);
+      this.edgesLookup.push(newEdge.toString());
+
+      const srcNodeAdjacencies = this.adjacencies.get(srcNode);
+      const dstNodeAdjacencies = this.adjacencies.get(dstNode);
+
+      if (srcNodeAdjacencies) {
+        srcNodeAdjacencies.push(dstNode);
+        this.adjacencies.set(srcNode, srcNodeAdjacencies);
+      } else {
+        this.adjacencies.set(srcNode, [dstNode]);
+      }
+
+      if (dstNodeAdjacencies) {
+        dstNodeAdjacencies.push(srcNode);
+        this.adjacencies.set(dstNode, dstNodeAdjacencies);
+      } else {
+        this.adjacencies.set(dstNode, [srcNode]);
+      }
+    });
+  }
+}
 
 function _pointsEqual(
   pointA: [number, number],
@@ -21,48 +107,164 @@ function _stringToPoint(string: string): [number, number] {
   return [parseFloat(lat), parseFloat(lng)];
 }
 
-// Test these functions
-export function findCycles(adjacencies: Map<string, [number, number][]>) {
-  let cycles: Cycle[] = [];
+function _stringToEdge(string: string): [string, string] {
+  const [nodeALat, nodeALng, nodeBLat, nodeBLng] = string.split(",");
+  return [`${nodeALat},${nodeALng}`, `${nodeBLat},${nodeBLng}`];
+}
 
-  adjacencies.forEach((dstPoints, currentPointString) => {
-    const currentPoint = _stringToPoint(currentPointString);
-    dstPoints.forEach((dstPoint) => {
-      let visitedPoints = new Set<string>();
-      visitedPoints.add(currentPointString);
-      visitedPoints.add(dstPoint.toString());
-      let queue = [
-        {
-          points: [currentPoint, dstPoint],
-          visitedPoints: visitedPoints,
-          depth: 1,
-        },
-      ];
-      while (queue.length > 0) {
-        console.log(queue);
-        const { points, visitedPoints, depth } = queue[0];
-        const queuePoint = points[points.length - 1];
-        queue = queue.slice(1);
-        let queueAdjacencies = adjacencies.get(queuePoint.toString());
-        if (queueAdjacencies) {
-          queueAdjacencies.forEach((adjacentPoint) => {
-            if (_pointsEqual(currentPoint, adjacentPoint) && depth !== 1) {
-              cycles.push([...points]);
-            } else if (!visitedPoints.has(adjacentPoint.toString())) {
-              const newVisitedPoints = new Set(visitedPoints);
-              newVisitedPoints.add(adjacentPoint.toString());
-              queue.push({
-                points: [...points, adjacentPoint],
-                visitedPoints: newVisitedPoints,
-                depth: depth + 1,
-              });
-            }
-          });
-        }
+function _createSpanningTree(adjacencyGraph: Graph) {
+  const spanningTree = new Graph();
+  adjacencyGraph.nodes.forEach((node) => {
+    let queue: [string, string][] = [];
+    const adjacencies = adjacencyGraph.adjacencies.get(node)!;
+    adjacencies.forEach((adjacency) => queue.push([node, adjacency]));
+    while (queue.length > 0) {
+      const [nodeA, nodeB] = queue.shift()!;
+      if (
+        !spanningTree.nodes.includes(nodeA) ||
+        !spanningTree.nodes.includes(nodeB)
+      ) {
+        spanningTree.addEdge([nodeA, nodeB]);
+        const nodeBAdjacencies = adjacencyGraph.adjacencies.get(nodeB);
+        nodeBAdjacencies!.forEach((adjancency) =>
+          queue.push([nodeB, adjancency])
+        );
       }
-    });
+    }
   });
-  return cycles;
+  return spanningTree;
+}
+
+function _findCycleFromEdge(
+  [nodeA, nodeB]: [string, string],
+  adjacencyGraph: Graph
+): Graph {
+  const paths: Map<string, string[]> = new Map();
+  let cycleGraph = new Graph();
+
+  let queue: PathQueue[] = [];
+  const nodeAAdjacencies = adjacencyGraph.adjacencies.get(nodeA);
+  const nodeBAdjacencies = adjacencyGraph.adjacencies.get(nodeB);
+  nodeAAdjacencies!.forEach((adjacency) => {
+    queue.push({ path: [nodeA, adjacency] });
+  });
+  nodeBAdjacencies!.forEach((adjacency) => {
+    queue.push({ path: [nodeB, adjacency] });
+  });
+
+  while (queue.length > 0) {
+    const { path } = queue.shift()!;
+    const latestNode = path[path.length - 1];
+
+    if (paths.has(latestNode)) {
+      const mergedPathReversed = paths.get(latestNode)!.reverse();
+      const pathsMerged = [...path, ...mergedPathReversed.slice(1)];
+      const cycle =
+        path[0] === nodeA ? [nodeB, ...pathsMerged] : [nodeA, ...pathsMerged];
+      cycle.forEach((node, index) => {
+        if (index !== cycle.length - 1) {
+          cycleGraph.addEdge([node, cycle[index + 1]]);
+        }
+      });
+      break;
+    }
+
+    if (latestNode !== nodeA && latestNode !== nodeB) {
+      paths.set(latestNode, path);
+      adjacencyGraph.adjacencies.get(latestNode)!.forEach((adjancency) => {
+        if (!path.includes(adjancency)) {
+          queue.push({ path: [...path, adjancency] });
+        }
+      });
+    }
+  }
+  return cycleGraph;
+}
+
+function _mergeCycles(initialCycles: Graph[]) {
+  let allCycles = [...initialCycles];
+  for (let indexA = 0; indexA < initialCycles.length - 1; indexA += 1) {
+    for (let indexB = indexA + 1; indexB < initialCycles.length; indexB += 1) {
+      let newCycle = new Graph();
+
+      const cycleAEdges = initialCycles[indexA].edges;
+      const cycleBEdges = initialCycles[indexB].edges;
+
+      const cycleAEdgesLookup = new Set(initialCycles[indexA].edgesLookup);
+      const cycleBEdgesLookup = new Set(initialCycles[indexB].edgesLookup);
+
+      let newEdges: [string, string][] = [];
+      cycleAEdges.forEach((edge) => {
+        if (
+          !cycleBEdgesLookup.has(edge.toString()) &&
+          !cycleBEdgesLookup.has([edge[1], edge[0]].toString())
+        ) {
+          newEdges.push(edge);
+        }
+      });
+      cycleBEdges.forEach((edge) => {
+        if (
+          !cycleAEdgesLookup.has(edge.toString()) &&
+          !cycleAEdgesLookup.has([edge[1], edge[0]].toString())
+        ) {
+          newEdges.push(edge);
+        }
+      });
+      newEdges.forEach((edge) => newCycle.addEdge(edge));
+      allCycles.push(newCycle);
+    }
+  }
+  return allCycles;
+}
+
+function _makeValidCycle(graph: Graph): Cycle | undefined {
+  if (graph.nodes.length <= 2) return;
+  const srcNode = graph.nodes[0];
+  let dstNode = graph.adjacencies.get(srcNode)![0];
+  let path = [srcNode, dstNode];
+  while (dstNode !== srcNode) {
+    const adjacencies = graph.adjacencies.get(dstNode)!;
+    if (adjacencies.length === 1) return;
+    if (adjacencies.length > 2) {
+      return;
+    }
+    dstNode =
+      path[path.length - 2] !== adjacencies[0]
+        ? adjacencies[0]
+        : adjacencies[1];
+    path.push(dstNode);
+  }
+  const cycle = path.map((node) => _stringToPoint(node));
+  return cycle;
+}
+
+// Test these functions
+export function findCycles(adjacencyGraph: Graph) {
+  const spanningTree = _createSpanningTree(adjacencyGraph);
+  // Find edges that are in adjacencyGraph but not spanningTree
+  // For each of these edges, v1 and v2, find nearest common vertex w
+  // The path w --> v1 and w --> v2 is the cycle w --> w
+  // Then for each of the cycles perform XOR between them and aggregate any resulting cylces
+  const nonOverlappingEdges = adjacencyGraph.edges.filter(
+    (edge) =>
+      !spanningTree.edgesLookup.includes(edge.toString()) &&
+      !spanningTree.edgesLookup.includes([edge[1], edge[0]].toString())
+  );
+
+  const initialCycles: Graph[] = nonOverlappingEdges
+    .map((edge) => _findCycleFromEdge(edge, spanningTree))
+    .filter((cycle) => cycle.nodes.length > 0);
+  const combinedCycles = _mergeCycles(initialCycles);
+
+  try {
+    const validCycles = combinedCycles
+      .map((cycle) => _makeValidCycle(cycle))
+      .filter((cycle) => cycle !== undefined) as Cycle[];
+    return validCycles;
+  } catch {
+    debugger;
+    throw new Error("na");
+  }
 }
 
 function _sortPoints(
@@ -120,7 +322,6 @@ export function removeOverlappingCycles(
         booleanContains(polygons[startIndex], polygons[endIndex]) &&
         booleanContains(polygons[startIndex], surfacePoint)
       ) {
-        console.log("We in there dog");
         removableIndices.push(startIndex);
       }
     }
