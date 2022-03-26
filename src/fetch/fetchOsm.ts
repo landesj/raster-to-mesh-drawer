@@ -2,16 +2,13 @@ import { toMercator } from "@turf/projection";
 import { LatLngBounds } from "leaflet";
 import { getMapBounds } from "../mapUtils";
 import * as turf from "turf";
+import { OsmElement, OsmFetchError, OSMResponse, OsmType } from "./types";
 import {
   BuildingGeometry,
   Coordinates,
-  OsmElement,
-  OsmFetchError,
-  OSMResponse,
-  OsmType,
   PolygonGeometry,
   RoadGeometry,
-} from "./types";
+} from "../pages/raster/types";
 
 const HIGHWAY_WHITELIST = [
   "residential",

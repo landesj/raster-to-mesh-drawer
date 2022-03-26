@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import parseGeoraster from "georaster";
 import { useSetRecoilState } from "recoil";
 import { GeoTiffState } from "./state";
-import { Geometry } from "../../fetch/types";
+import { Geometry } from "./types";
 
 type ImportProps = {
   rasterArrayBuffer: ArrayBuffer | null;

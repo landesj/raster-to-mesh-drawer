@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./drawingCanvas/DrawingCanvas";
 import { fetchOsmBuildings } from "../../fetch/fetchOsm";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
-import { Button, Input, Label, Page } from "../style";
+import { Page } from "../style";
 import { useRecoilState } from "recoil";
 import { BoundsState, OsmBuildingsState } from "./state";
 import { RasterNavbar } from "./Navbar";
