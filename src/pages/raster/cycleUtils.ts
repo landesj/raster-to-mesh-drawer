@@ -322,6 +322,7 @@ export function removeOverlappingCycles(
             INTERSECTION_AREA_THRESHOLD
         ) {
           removableIndices.push(startIndex);
+          break;
         }
       }
     }
