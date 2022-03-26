@@ -6,9 +6,8 @@ import {
   fetchHeightFromRaster,
   filterDuplicateCycles,
   findCycles,
-  Graph,
   removeOverlappingCycles,
-} from "./cycleUtils";
+} from "./drawingCanvas/cycleUtils";
 import { toMercator } from "@turf/projection";
 import {
   BuildingGeometry,
@@ -16,6 +15,7 @@ import {
   PolygonGeometry,
   RoadGeometry,
 } from "../../fetch/types";
+import { Graph } from "./drawingCanvas/types";
 
 export const OsmBuildingsState = atom<BuildingGeometry[]>({
   key: "OsmBuildingsState",
@@ -61,7 +61,6 @@ export const DrawPolygonsSelector = selector({
     const adjacencyGraph = new Graph();
     adjacencyGraph.createGraphFromListOfLines(drawnLines);
     const cycles = findCycles(adjacencyGraph);
-    console.log(cycles);
     const uniqueCycles = filterDuplicateCycles(cycles);
     const distinctPolygons = removeOverlappingCycles(uniqueCycles);
     const polygonsWithHeight = fetchHeightFromRaster(

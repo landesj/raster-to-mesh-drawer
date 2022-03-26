@@ -1,117 +1,13 @@
 import * as turf from "turf";
 import booleanContains from "@turf/boolean-contains";
 import { Feature, GeoJsonProperties, Polygon } from "geojson";
-import { LineType } from "../../assets/Line";
-
-type TurfPolygon = Feature<Polygon, GeoJsonProperties>;
-type Cycle = [number, number][];
-type PolygonWithHeight = {
-  polygon: TurfPolygon;
-  height: number;
-};
-type PathQueue = { path: string[] };
+import { Cycle, Graph, PathQueue, PolygonWithHeight } from "./types";
 
 const INTERSECTION_AREA_THRESHOLD = 0.0001;
-
-export class Graph {
-  nodes: string[];
-  edges: [string, string][];
-  edgesLookup: string[];
-  adjacencies: Map<string, string[]>;
-
-  constructor() {
-    this.nodes = [];
-    this.edges = [];
-    this.edgesLookup = [];
-    this.adjacencies = new Map<string, string[]>();
-  }
-
-  addNode(node: string) {
-    if (!this.nodes.includes(node)) {
-      this.nodes.push(node);
-    }
-  }
-
-  addEdge(edge: [string, string]) {
-    const [srcNode, dstNode] = edge;
-    this.addNode(srcNode);
-    this.addNode(dstNode);
-    if (
-      !this.edgesLookup.includes(edge.toString()) &&
-      !this.edgesLookup.includes([dstNode, srcNode].toString())
-    ) {
-      this.edges.push(edge);
-      this.edgesLookup.push(edge.toString());
-
-      const srcNodeAdjacencies = this.adjacencies.get(srcNode);
-      const dstNodeAdjacencies = this.adjacencies.get(dstNode);
-
-      if (srcNodeAdjacencies) {
-        srcNodeAdjacencies.push(dstNode);
-        this.adjacencies.set(srcNode, srcNodeAdjacencies);
-      } else {
-        this.adjacencies.set(srcNode, [dstNode]);
-      }
-
-      if (dstNodeAdjacencies) {
-        dstNodeAdjacencies.push(srcNode);
-        this.adjacencies.set(dstNode, dstNodeAdjacencies);
-      } else {
-        this.adjacencies.set(dstNode, [srcNode]);
-      }
-    }
-  }
-
-  createGraphFromListOfLines(lines: LineType[]) {
-    lines.forEach((line: LineType) => {
-      const srcNode = [line.latSrc, line.lngSrc].toString();
-      const dstNode = [line.latDst, line.lngDst].toString();
-      if (!this.nodes.includes(srcNode)) {
-        this.nodes.push(srcNode);
-      }
-      if (!this.nodes.includes(dstNode)) {
-        this.nodes.push(dstNode);
-      }
-
-      const newEdge: [string, string] = [srcNode, dstNode];
-      this.edges.push(newEdge);
-      this.edgesLookup.push(newEdge.toString());
-
-      const srcNodeAdjacencies = this.adjacencies.get(srcNode);
-      const dstNodeAdjacencies = this.adjacencies.get(dstNode);
-
-      if (srcNodeAdjacencies) {
-        srcNodeAdjacencies.push(dstNode);
-        this.adjacencies.set(srcNode, srcNodeAdjacencies);
-      } else {
-        this.adjacencies.set(srcNode, [dstNode]);
-      }
-
-      if (dstNodeAdjacencies) {
-        dstNodeAdjacencies.push(srcNode);
-        this.adjacencies.set(dstNode, dstNodeAdjacencies);
-      } else {
-        this.adjacencies.set(dstNode, [srcNode]);
-      }
-    });
-  }
-}
-
-function _pointsEqual(
-  pointA: [number, number],
-  pointB: [number, number]
-): boolean {
-  return pointA[0] === pointB[0] && pointA[1] === pointB[1];
-}
 
 function _stringToPoint(string: string): [number, number] {
   const [lat, lng] = string.split(",");
   return [parseFloat(lat), parseFloat(lng)];
-}
-
-function _stringToEdge(string: string): [string, string] {
-  const [nodeALat, nodeALng, nodeBLat, nodeBLng] = string.split(",");
-  return [`${nodeALat},${nodeALng}`, `${nodeBLat},${nodeBLng}`];
 }
 
 function _createSpanningTree(adjacencyGraph: Graph) {
@@ -258,9 +154,7 @@ export function findCycles(adjacencyGraph: Graph) {
   const initialCycles: Graph[] = nonOverlappingEdges
     .map((edge) => _findCycleFromEdge(edge, spanningTree))
     .filter((cycle) => cycle.nodes.length > 0);
-  console.log(initialCycles);
   const combinedCycles = _mergeCycles(initialCycles);
-  console.log(combinedCycles);
 
   try {
     const validCycles = combinedCycles
@@ -290,7 +184,7 @@ export function filterDuplicateCycles(cycles: Cycle[]): Cycle[] {
 
   let uniqueCycleStrings = new Set<string>();
   let uniqueIndices = [];
-  for (let index = 0; index < sortedCycles.length - 1; index += 1) {
+  for (let index = 0; index < sortedCycles.length; index += 1) {
     const cycleString = cycles[index].toString();
     if (!uniqueCycleStrings.has(cycleString)) {
       uniqueIndices.push(index);

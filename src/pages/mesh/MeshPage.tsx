@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
-import { BoundsState } from "../raster/state";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Page } from "../style";
 import { Navbar } from "./Navbar";
