@@ -7,7 +7,7 @@ import {
   filterDuplicateCycles,
   findCycles,
   removeOverlappingCycles,
-} from "./cycleUtils";
+} from "./drawingCanvas/cycleUtils";
 import { toMercator } from "@turf/projection";
 import {
   BuildingGeometry,
@@ -15,6 +15,7 @@ import {
   PolygonGeometry,
   RoadGeometry,
 } from "../../fetch/types";
+import { Graph } from "./drawingCanvas/types";
 
 export const OsmBuildingsState = atom<BuildingGeometry[]>({
   key: "OsmBuildingsState",
@@ -57,30 +58,9 @@ export const DrawPolygonsSelector = selector({
     const drawnLines = get(DrawnLinesState);
     const georaster = get(GeoTiffState);
     if (georaster === undefined) return [];
-    const adjacencies = new Map<string, [number, number][]>();
-    drawnLines.forEach((line: LineType) => {
-      const pointSrc: [number, number] = [line.latSrc, line.lngSrc];
-      const pointDst: [number, number] = [line.latDst, line.lngDst];
-      const pointSrcAdjacencies = adjacencies.get(pointSrc.toString());
-      if (pointSrcAdjacencies) {
-        adjacencies.set(pointSrc.toString(), [
-          ...pointSrcAdjacencies,
-          pointDst,
-        ]);
-      } else {
-        adjacencies.set(pointSrc.toString(), [pointDst]);
-      }
-      const pointDstAdjacencies = adjacencies.get(pointDst.toString());
-      if (pointDstAdjacencies) {
-        adjacencies.set(pointDst.toString(), [
-          ...pointDstAdjacencies,
-          pointSrc,
-        ]);
-      } else {
-        adjacencies.set(pointDst.toString(), [pointSrc]);
-      }
-    });
-    const cycles = findCycles(adjacencies);
+    const adjacencyGraph = new Graph();
+    adjacencyGraph.createGraphFromListOfLines(drawnLines);
+    const cycles = findCycles(adjacencyGraph);
     const uniqueCycles = filterDuplicateCycles(cycles);
     const distinctPolygons = removeOverlappingCycles(uniqueCycles);
     const polygonsWithHeight = fetchHeightFromRaster(
