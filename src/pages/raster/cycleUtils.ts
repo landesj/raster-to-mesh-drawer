@@ -287,31 +287,17 @@ export function filterDuplicateCycles(cycles: Cycle[]): Cycle[] {
   const sortedCycles = cyclesDuplicated.map((cycle) =>
     [...cycle].sort((a, b) => _sortPoints(a, b))
   );
-  let removableIndices = [];
-  for (
-    let startIndex = 0;
-    startIndex < sortedCycles.length - 1;
-    startIndex += 1
-  ) {
-    for (
-      let endIndex = startIndex + 1;
-      endIndex < sortedCycles.length;
-      endIndex += 1
-    ) {
-      if (
-        sortedCycles[startIndex].toString() ===
-        sortedCycles[endIndex].toString()
-      ) {
-        removableIndices.push(endIndex);
-      }
+
+  let uniqueCycleStrings = new Set<string>();
+  let uniqueIndices = [];
+  for (let index = 0; index < sortedCycles.length - 1; index += 1) {
+    const cycleString = cycles[index].toString();
+    if (!uniqueCycleStrings.has(cycleString)) {
+      uniqueIndices.push(index);
+      uniqueCycleStrings.add(cycleString);
     }
   }
-  let uniqueCycles: Cycle[] = [];
-  for (let index = 0; index < sortedCycles.length; index += 1) {
-    if (!removableIndices.includes(index)) {
-      uniqueCycles.push(cycles[index]);
-    }
-  }
+  let uniqueCycles: Cycle[] = uniqueIndices.map((index) => cycles[index]);
   return uniqueCycles;
 }
 
