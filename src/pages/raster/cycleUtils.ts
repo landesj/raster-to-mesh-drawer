@@ -11,6 +11,8 @@ type PolygonWithHeight = {
 };
 type PathQueue = { path: string[] };
 
+const INTERSECTION_AREA_THRESHOLD = 0.0001;
+
 export class Graph {
   nodes: string[];
   edges: [string, string][];
@@ -183,15 +185,16 @@ function _findCycleFromEdge(
 
 function _mergeCycles(initialCycles: Graph[]) {
   let allCycles = [...initialCycles];
-  for (let indexA = 0; indexA < initialCycles.length - 1; indexA += 1) {
-    for (let indexB = indexA + 1; indexB < initialCycles.length; indexB += 1) {
+  for (let indexA = 0; indexA < initialCycles.length; indexA += 1) {
+    let newCycles = [];
+    for (let indexB = indexA + 1; indexB < allCycles.length; indexB += 1) {
       let newCycle = new Graph();
 
       const cycleAEdges = initialCycles[indexA].edges;
-      const cycleBEdges = initialCycles[indexB].edges;
+      const cycleBEdges = allCycles[indexB].edges;
 
       const cycleAEdgesLookup = new Set(initialCycles[indexA].edgesLookup);
-      const cycleBEdgesLookup = new Set(initialCycles[indexB].edgesLookup);
+      const cycleBEdgesLookup = new Set(allCycles[indexB].edgesLookup);
 
       let newEdges: [string, string][] = [];
       cycleAEdges.forEach((edge) => {
@@ -211,8 +214,9 @@ function _mergeCycles(initialCycles: Graph[]) {
         }
       });
       newEdges.forEach((edge) => newCycle.addEdge(edge));
-      allCycles.push(newCycle);
+      newCycles.push(newCycle);
     }
+    allCycles = [...allCycles, ...newCycles];
   }
   return allCycles;
 }
@@ -254,7 +258,9 @@ export function findCycles(adjacencyGraph: Graph) {
   const initialCycles: Graph[] = nonOverlappingEdges
     .map((edge) => _findCycleFromEdge(edge, spanningTree))
     .filter((cycle) => cycle.nodes.length > 0);
+  console.log(initialCycles);
   const combinedCycles = _mergeCycles(initialCycles);
+  console.log(combinedCycles);
 
   try {
     const validCycles = combinedCycles
@@ -315,14 +321,22 @@ export function removeOverlappingCycles(
   const polygons = cycles.map((cycle) => turf.polygon([[...cycle, cycle[0]]]));
   let removableIndices = [];
   for (let startIndex = 0; startIndex < polygons.length; startIndex += 1) {
+    const polygonStartArea = turf.area(polygons[startIndex]);
     for (let endIndex = 0; endIndex < polygons.length; endIndex += 1) {
       if (startIndex === endIndex) continue;
-      const surfacePoint = turf.pointOnSurface(polygons[endIndex]);
-      if (
-        booleanContains(polygons[startIndex], polygons[endIndex]) &&
-        booleanContains(polygons[startIndex], surfacePoint)
-      ) {
-        removableIndices.push(startIndex);
+      const polygonIntersection = turf.intersect(
+        polygons[startIndex],
+        polygons[endIndex]
+      );
+      if (polygonIntersection) {
+        const polygonIntersectionArea = turf.area(polygonIntersection);
+        if (
+          polygonIntersectionArea > 0 &&
+          Math.abs(polygonStartArea - polygonIntersectionArea) >
+            INTERSECTION_AREA_THRESHOLD
+        ) {
+          removableIndices.push(startIndex);
+        }
       }
     }
   }
