@@ -138,13 +138,8 @@ function _makeValidCycle(graph: Graph): Cycle | undefined {
   return cycle;
 }
 
-// Test these functions
 export function findCycles(adjacencyGraph: Graph) {
   const spanningTree = _createSpanningTree(adjacencyGraph);
-  // Find edges that are in adjacencyGraph but not spanningTree
-  // For each of these edges, v1 and v2, find nearest common vertex w
-  // The path w --> v1 and w --> v2 is the cycle w --> w
-  // Then for each of the cycles perform XOR between them and aggregate any resulting cylces
   const nonOverlappingEdges = adjacencyGraph.edges.filter(
     (edge) =>
       !spanningTree.edgesLookup.includes(edge.toString()) &&
