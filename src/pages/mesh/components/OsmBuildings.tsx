@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmBuildingsState } from "../../raster/state";
+import { OsmBuildingsState } from "../../raster/state";
 import { Button } from "../../style";
-import { getMercatorMapReferencePoint } from "../utils";
+import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, MATERIAL, three } from "../MeshPage";
+import { MeshBoundsState } from "../../state";
+
+const OSM_BUILDING_GEOMETRY_NAME = "OSM_BUILDING";
 
 export function OsmBuildings() {
-  const mapBounds = useRecoilValue(BoundsState);
+  const meshMapBounds = useRecoilValue(MeshBoundsState);
   const osmBuildings = useRecoilValue(OsmBuildingsState);
   const [showOsmBuildings, setShowOsmBuildings] = useState(false);
 
@@ -19,7 +22,7 @@ export function OsmBuildings() {
     setShowOsmBuildings(!showOsmBuildings);
   };
 
-  const referencePoint = getMercatorMapReferencePoint(mapBounds);
+  const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
   useEffect(() => {
     if (
       referencePoint === undefined ||
@@ -29,12 +32,15 @@ export function OsmBuildings() {
       return;
     }
 
+    const { referencePointLat, referencePointLon } =
+      getLatLonFromString(referencePoint);
+
     osmBuildings.forEach((osmBuilding) => {
       const osmVectors = osmBuilding.coordinates.map(
         (point) =>
           new THREE.Vector2(
-            point[1] - referencePoint.referencePointLon,
-            point[0] - referencePoint.referencePointLat
+            point[1] - referencePointLon,
+            point[0] - referencePointLat
           )
       );
       const polygonShape = new THREE.Shape(osmVectors);
@@ -42,6 +48,7 @@ export function OsmBuildings() {
         depth: 10,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, MATERIAL);
+      buildingMesh.name = OSM_BUILDING_GEOMETRY_NAME;
       three.scene.add(buildingMesh);
     });
     three.scene.remove(pointLight);
@@ -54,7 +61,7 @@ export function OsmBuildings() {
     three.renderer.render(three.scene, three.camera);
 
     return function cleanupScene() {
-      cleanupMeshesFromScene(three.scene);
+      cleanupMeshesFromScene(three.scene, OSM_BUILDING_GEOMETRY_NAME);
     };
   }, [osmBuildings, referencePoint, pointLight, showOsmBuildings]);
   return (

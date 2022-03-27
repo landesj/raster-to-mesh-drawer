@@ -1,19 +1,12 @@
 import { toMercator } from "@turf/projection";
-import { LatLngBounds } from "leaflet";
 import bbox from "@turf/bbox";
-import { getMapBounds } from "../../mapUtils";
+import { MapBounds } from "../../mapUtils";
 import * as turf from "turf";
 
-type ReferencePoint = {
-  referencePointLon: number;
-  referencePointLat: number;
-};
-
 export function getMercatorMapReferencePoint(
-  mapBounds: LatLngBounds | undefined
-): ReferencePoint | undefined {
-  if (!mapBounds) return;
-  const bounds = getMapBounds(mapBounds);
+  bounds: MapBounds | undefined
+): string | undefined {
+  if (!bounds) return;
   const polygon = turf.polygon([
     [
       [bounds.latMin, bounds.lonMin],
@@ -27,8 +20,12 @@ export function getMercatorMapReferencePoint(
   const polygonBbox = bbox(polygonMercator);
   const referencePointLon = (polygonBbox[3] + polygonBbox[1]) / 2;
   const referencePointLat = (polygonBbox[2] + polygonBbox[0]) / 2;
+  return `${referencePointLat},${referencePointLon}`;
+}
+
+export function getLatLonFromString(string: string) {
   return {
-    referencePointLat: referencePointLat,
-    referencePointLon: referencePointLon,
+    referencePointLat: parseFloat(string.split(",")[0]),
+    referencePointLon: parseFloat(string.split(",")[1]),
   };
 }

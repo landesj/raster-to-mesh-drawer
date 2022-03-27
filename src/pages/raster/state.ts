@@ -1,4 +1,3 @@
-import { LatLngBounds } from "leaflet";
 import { atom, selector } from "recoil";
 import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
@@ -11,6 +10,7 @@ import {
 import { toMercator } from "@turf/projection";
 import { BuildingGeometry, PolygonGeometry, RoadGeometry } from "./types";
 import { Graph } from "./drawingCanvas/types";
+import { MapBounds } from "../../mapUtils";
 
 export const OsmBuildingsState = atom<BuildingGeometry[]>({
   key: "OsmBuildingsState",
@@ -27,8 +27,8 @@ export const OsmRoadsState = atom<RoadGeometry[]>({
   default: [],
 });
 
-export const BoundsState = atom<LatLngBounds | undefined>({
-  key: "BoundsState",
+export const LeafletBoundsState = atom<MapBounds | undefined>({
+  key: "LeafletBoundsState",
   default: undefined,
 });
 

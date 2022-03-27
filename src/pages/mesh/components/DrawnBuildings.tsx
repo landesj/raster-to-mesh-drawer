@@ -1,20 +1,24 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, DrawPolygonsSelector } from "../../raster/state";
+import * as turf from "turf";
+import { DrawPolygonsSelector } from "../../raster/state";
+import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
-import { getMercatorMapReferencePoint } from "../utils";
+import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 
 export const BUILDING_MATERIAL = new THREE.MeshLambertMaterial({
   color: "#ffffff",
 });
 
+const DRAWN_BUILDING_GEOMETRY_NAME = "DRAWN_BUILDING";
+
 export function DrawnBuildings() {
-  const mapBounds = useRecoilValue(BoundsState);
-
+  const meshMapBounds = useRecoilValue(MeshBoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
+  const [isCameraSet, setCamera] = useState(false);
 
-  const referencePoint = getMercatorMapReferencePoint(mapBounds);
+  const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
 
   const pointLight = useMemo(() => {
     return new THREE.PointLight(0xffffff, 1, 100);
@@ -29,12 +33,15 @@ export function DrawnBuildings() {
       return;
     }
 
+    const { referencePointLat, referencePointLon } =
+      getLatLonFromString(referencePoint);
+
     drawnPolygons.forEach((polygonWithHeight) => {
       const vectors = polygonWithHeight.polygon.geometry.coordinates[0].map(
         (point) =>
           new THREE.Vector2(
-            point[1] - referencePoint.referencePointLon,
-            point[0] - referencePoint.referencePointLat
+            point[1] - referencePointLon,
+            point[0] - referencePointLat
           )
       );
       const polygonShape = new THREE.Shape(vectors);
@@ -42,11 +49,25 @@ export function DrawnBuildings() {
         depth: polygonWithHeight.height,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, BUILDING_MATERIAL);
+      buildingMesh.name = DRAWN_BUILDING_GEOMETRY_NAME;
       three.scene.add(buildingMesh);
       if (polygonWithHeight.height > three.camera.position.z) {
         three.camera.position.z = polygonWithHeight.height + 20;
       }
     });
+
+    if (!isCameraSet) {
+      const featureCollection = turf.featureCollection(
+        drawnPolygons.map((polygonWithHeight) => polygonWithHeight.polygon)
+      );
+      const bbox = turf.bbox(featureCollection);
+      const yPosition = (bbox[2] + bbox[0]) / 2 - referencePointLat;
+      const xPosition = (bbox[3] + bbox[1]) / 2 - referencePointLon;
+      three.camera.position.set(xPosition, yPosition, 100);
+
+      setCamera(true);
+    }
+
     three.scene.remove(pointLight);
     pointLight.position.set(
       three.camera.position.x,
@@ -57,7 +78,7 @@ export function DrawnBuildings() {
     three.renderer.render(three.scene, three.camera);
 
     return function cleanupScene() {
-      cleanupMeshesFromScene(three.scene);
+      cleanupMeshesFromScene(three.scene, DRAWN_BUILDING_GEOMETRY_NAME);
     };
   }, [drawnPolygons, referencePoint, pointLight]);
   return <></>;
