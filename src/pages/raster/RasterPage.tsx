@@ -6,7 +6,7 @@ import { fetchOsmBuildings } from "../../fetch/fetchOsm";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
 import { Page } from "../style";
 import { useRecoilState } from "recoil";
-import { BoundsState, OsmBuildingsState } from "./state";
+import { LeafletBoundsState, OsmBuildingsState } from "./state";
 import { RasterNavbar } from "./Navbar";
 
 export const CANVAS_HEIGHT = "90vh";
@@ -15,7 +15,7 @@ export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
-  const [mapBounds, setMapBounds] = useRecoilState(BoundsState);
+  const [mapBounds, setMapBounds] = useRecoilState(LeafletBoundsState);
   const [showRaster, setShowRaster] = useState<boolean>(true);
 
   const onInputChange = (files: FileList | null) => {

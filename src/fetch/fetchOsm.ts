@@ -1,6 +1,6 @@
 import { toMercator } from "@turf/projection";
 import { LatLngBounds } from "leaflet";
-import { getMapBounds } from "../mapUtils";
+import { getMapBounds, MapBounds } from "../mapUtils";
 import * as turf from "turf";
 import { OsmElement, OsmFetchError, OSMResponse, OsmType } from "./types";
 import {
@@ -34,14 +34,20 @@ async function fetchOsmData(url: string) {
   return responseJson;
 }
 
-async function fetchParksFromOsm(bounds: LatLngBounds) {
-  const { latMin, latMax, lonMin, lonMax } = getMapBounds(bounds);
+async function fetchParksFromOsm({
+  latMin,
+  latMax,
+  lonMin,
+  lonMax,
+}: MapBounds) {
   const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['leisure'='park'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
   return fetchOsmData(requestUrl);
 }
 
-async function fetchDataFromOsm(dataType: string, bounds: LatLngBounds) {
-  const { latMin, latMax, lonMin, lonMax } = getMapBounds(bounds);
+async function fetchDataFromOsm(
+  dataType: string,
+  { latMin, latMax, lonMin, lonMax }: MapBounds
+) {
   const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['${dataType}'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
   return fetchOsmData(requestUrl);
 }
@@ -87,7 +93,7 @@ function getRoadGeometry(
   };
 }
 
-async function fetchOsmPolygonsFromBounds(bounds: LatLngBounds, type: OsmType) {
+async function fetchOsmPolygonsFromBounds(bounds: MapBounds, type: OsmType) {
   let elements;
   if (type === OsmType.BUILDING) {
     elements = await fetchDataFromOsm(type, bounds).then(
@@ -112,7 +118,7 @@ async function fetchOsmPolygonsFromBounds(bounds: LatLngBounds, type: OsmType) {
 }
 
 export async function fetchOsmBuildings(
-  bounds: LatLngBounds,
+  bounds: MapBounds,
   setOsmBuildings: React.Dispatch<React.SetStateAction<BuildingGeometry[]>>
 ) {
   const buildingGeometries = await fetchOsmPolygonsFromBounds(
@@ -123,7 +129,7 @@ export async function fetchOsmBuildings(
 }
 
 export async function fetchOsmRoads(
-  bounds: LatLngBounds,
+  bounds: MapBounds,
   setOsmRoads: React.Dispatch<React.SetStateAction<RoadGeometry[]>>
 ) {
   const elements = await fetchDataFromOsm(OsmType.ROAD, bounds).then(
@@ -146,7 +152,7 @@ export async function fetchOsmRoads(
 }
 
 export async function fetchOsmVegetation(
-  bounds: LatLngBounds,
+  bounds: MapBounds,
   setOsmVegetation: React.Dispatch<React.SetStateAction<PolygonGeometry[]>>
 ) {
   const vegetationGeometries = await fetchOsmPolygonsFromBounds(

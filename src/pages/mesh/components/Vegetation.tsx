@@ -1,27 +1,28 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmVegetationState } from "../../raster/state";
+import { LeafletBoundsState, OsmVegetationState } from "../../raster/state";
 import { fetchOsmVegetation } from "../../../fetch/fetchOsm";
 import { getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { Button } from "../../style";
+import { MeshBoundsState } from "../../state";
 
 const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
 
 export function Vegetation() {
-  const mapBounds = useRecoilValue(BoundsState);
+  const meshMapBounds = useRecoilValue(MeshBoundsState);
   const [osmVegetation, setOsmVegetation] = useRecoilState(OsmVegetationState);
 
   const fetchAndApplyOsmVegetation = () => {
-    if (mapBounds === undefined) {
+    if (meshMapBounds === undefined) {
       alert("Cannot fetch OSM vegetation");
     } else {
-      fetchOsmVegetation(mapBounds, setOsmVegetation);
+      fetchOsmVegetation(meshMapBounds.bounds, setOsmVegetation);
     }
   };
 
-  const referencePoint = getMercatorMapReferencePoint(mapBounds);
+  const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
   useEffect(() => {
     if (osmVegetation.length === 0 || referencePoint === undefined) return;
     osmVegetation.forEach((vegetation) => {

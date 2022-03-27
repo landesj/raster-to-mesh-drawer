@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, DrawPolygonsSelector } from "../../raster/state";
+import { LeafletBoundsState, DrawPolygonsSelector } from "../../raster/state";
+import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { getMercatorMapReferencePoint } from "../utils";
 
@@ -10,11 +11,11 @@ export const BUILDING_MATERIAL = new THREE.MeshLambertMaterial({
 });
 
 export function DrawnBuildings() {
-  const mapBounds = useRecoilValue(BoundsState);
+  const meshMapBounds = useRecoilValue(MeshBoundsState);
 
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
 
-  const referencePoint = getMercatorMapReferencePoint(mapBounds);
+  const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
 
   const pointLight = useMemo(() => {
     return new THREE.PointLight(0xffffff, 1, 100);
@@ -46,6 +47,8 @@ export function DrawnBuildings() {
       if (polygonWithHeight.height > three.camera.position.z) {
         three.camera.position.z = polygonWithHeight.height + 20;
       }
+      three.camera.position.x = vectors[0].x;
+      three.camera.position.y = vectors[1].y;
     });
     three.scene.remove(pointLight);
     pointLight.position.set(

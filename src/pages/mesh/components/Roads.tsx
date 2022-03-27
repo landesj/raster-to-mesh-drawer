@@ -1,29 +1,30 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmRoadsState } from "../../raster/state";
+import { LeafletBoundsState, OsmRoadsState } from "../../raster/state";
 import { Button } from "../../style";
 import { fetchOsmRoads } from "../../../fetch/fetchOsm";
 import { getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
+import { MeshBoundsState } from "../../state";
 
 const ROAD_MATERIAL = new THREE.LineBasicMaterial({
   color: "#191919",
 });
 
 export function Roads() {
-  const mapBounds = useRecoilValue(BoundsState);
+  const meshMapBounds = useRecoilValue(MeshBoundsState);
   const [osmRoads, setOsmRoads] = useRecoilState(OsmRoadsState);
 
   const fetchAndApplyOsmRoads = () => {
-    if (mapBounds === undefined) {
+    if (meshMapBounds === undefined) {
       alert("Cannot fetch OSM roads");
     } else {
-      fetchOsmRoads(mapBounds, setOsmRoads);
+      fetchOsmRoads(meshMapBounds.bounds, setOsmRoads);
     }
   };
 
-  const referencePoint = getMercatorMapReferencePoint(mapBounds);
+  const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
   useEffect(() => {
     if (osmRoads.length === 0 || referencePoint === undefined) return;
     osmRoads.forEach((road) => {

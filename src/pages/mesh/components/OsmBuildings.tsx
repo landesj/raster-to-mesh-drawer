@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { BoundsState, OsmBuildingsState } from "../../raster/state";
+import { LeafletBoundsState, OsmBuildingsState } from "../../raster/state";
 import { Button } from "../../style";
 import { getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, MATERIAL, three } from "../MeshPage";
+import { MeshBoundsState } from "../../state";
 
 export function OsmBuildings() {
-  const mapBounds = useRecoilValue(BoundsState);
+  const meshMapBounds = useRecoilValue(MeshBoundsState);
   const osmBuildings = useRecoilValue(OsmBuildingsState);
   const [showOsmBuildings, setShowOsmBuildings] = useState(false);
 
@@ -19,7 +20,7 @@ export function OsmBuildings() {
     setShowOsmBuildings(!showOsmBuildings);
   };
 
-  const referencePoint = getMercatorMapReferencePoint(mapBounds);
+  const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
   useEffect(() => {
     if (
       referencePoint === undefined ||

@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { Polygon, useMap, useMapEvent } from "react-leaflet";
 import { v4 as uuidv4 } from "uuid";
 import parseGeoraster from "georaster";
-import { useSetRecoilState } from "recoil";
+import { SetterOrUpdater, useSetRecoilState } from "recoil";
 import { GeoTiffState } from "./state";
 import { Geometry } from "./types";
+import { getMapBounds, MapBounds } from "../../mapUtils";
+import { MeshBoundsState } from "../state";
 
 type ImportProps = {
   rasterArrayBuffer: ArrayBuffer | null;
@@ -15,7 +17,7 @@ type ImportProps = {
 };
 
 type SetBoundsProps = {
-  setBounds: React.Dispatch<React.SetStateAction<LatLngBounds | undefined>>;
+  setBounds: SetterOrUpdater<MapBounds | undefined>;
 };
 
 type OsmProps = {
@@ -25,13 +27,15 @@ type OsmProps = {
 export function SetMapBounds({ setBounds }: SetBoundsProps) {
   const setBoundsDebounced = debounce(setBounds, 100);
   const leafletMap = useMap();
-  useMapEvent("move", () => setBoundsDebounced(leafletMap.getBounds()));
+  const leafletBounds = getMapBounds(leafletMap.getBounds());
+  useMapEvent("move", () => setBoundsDebounced(leafletBounds));
   return <></>;
 }
 
 export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
   const leafletMap = useMap();
   const setGeoTiffState = useSetRecoilState(GeoTiffState);
+  const setMapBoundsState = useSetRecoilState(MeshBoundsState);
   const [geoRasterLayerShown, setGeoRasterLayerShown] =
     useState<any>(undefined);
 
@@ -42,8 +46,13 @@ export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
         georaster: georaster,
         opacity: 0.95,
       });
+      const geoTiffBounds = geoTiff.getBounds();
       leafletMap.addLayer(geoTiff);
-      leafletMap.fitBounds(geoTiff.getBounds());
+      leafletMap.fitBounds(geoTiffBounds);
+
+      const mapBounds = getMapBounds(geoTiffBounds);
+
+      setMapBoundsState({ bounds: mapBounds, type: "import" });
       setGeoTiffState(georaster);
       setGeoRasterLayerShown(geoTiff);
     });
