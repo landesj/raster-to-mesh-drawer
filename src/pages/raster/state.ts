@@ -1,4 +1,3 @@
-import { LatLngBounds } from "leaflet";
 import { atom, selector } from "recoil";
 import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";

@@ -62,7 +62,7 @@ function MeshPage() {
       0.1,
       10000
     );
-    camera.position.z = 200;
+    camera.position.z = 300;
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({
@@ -83,6 +83,7 @@ function MeshPage() {
     let animationId: number;
     function animate() {
       animationId = requestAnimationFrame(animate);
+      orbit.update();
       three.scene.remove(pointLight);
       pointLight.position.set(
         three.camera.position.x,

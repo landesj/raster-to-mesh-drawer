@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
+import * as turf from "turf";
 import { DrawPolygonsSelector } from "../../raster/state";
 import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
@@ -14,8 +15,8 @@ const DRAWN_BUILDING_GEOMETRY_NAME = "DRAWN_BUILDING";
 
 export function DrawnBuildings() {
   const meshMapBounds = useRecoilValue(MeshBoundsState);
-
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
+  const [isCameraSet, setCamera] = useState(false);
 
   const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
 
@@ -54,6 +55,19 @@ export function DrawnBuildings() {
         three.camera.position.z = polygonWithHeight.height + 20;
       }
     });
+
+    if (!isCameraSet) {
+      const featureCollection = turf.featureCollection(
+        drawnPolygons.map((polygonWithHeight) => polygonWithHeight.polygon)
+      );
+      const bbox = turf.bbox(featureCollection);
+      const yPosition = (bbox[2] + bbox[0]) / 2 - referencePointLat;
+      const xPosition = (bbox[3] + bbox[1]) / 2 - referencePointLon;
+      three.camera.position.set(xPosition, yPosition, 100);
+
+      setCamera(true);
+    }
+
     three.scene.remove(pointLight);
     pointLight.position.set(
       three.camera.position.x,
