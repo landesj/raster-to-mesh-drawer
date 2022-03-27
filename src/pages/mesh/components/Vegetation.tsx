@@ -1,14 +1,15 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { LeafletBoundsState, OsmVegetationState } from "../../raster/state";
+import { OsmVegetationState } from "../../raster/state";
 import { fetchOsmVegetation } from "../../../fetch/fetchOsm";
-import { getMercatorMapReferencePoint } from "../utils";
+import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { Button } from "../../style";
 import { MeshBoundsState } from "../../state";
 
 const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
+const VEGETATION_GEOMETRY_NAME = "VEGETATION";
 
 export function Vegetation() {
   const meshMapBounds = useRecoilValue(MeshBoundsState);
@@ -25,22 +26,27 @@ export function Vegetation() {
   const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
   useEffect(() => {
     if (osmVegetation.length === 0 || referencePoint === undefined) return;
+
+    const { referencePointLat, referencePointLon } =
+      getLatLonFromString(referencePoint);
+
     osmVegetation.forEach((vegetation) => {
       const vectors = vegetation.geometry.coordinates[0].map(
         (point) =>
           new THREE.Vector2(
-            point[1] - referencePoint.referencePointLon,
-            point[0] - referencePoint.referencePointLat
+            point[1] - referencePointLon,
+            point[0] - referencePointLat
           )
       );
       const shape = new THREE.Shape(vectors);
       const geometry = new THREE.ShapeBufferGeometry(shape);
       const mesh = new THREE.Mesh(geometry, VEGETATION_MATERIAL);
+      mesh.name = VEGETATION_GEOMETRY_NAME;
       three.scene.add(mesh);
     });
     three.renderer.render(three.scene, three.camera);
     return function cleanupScene() {
-      cleanupMeshesFromScene(three.scene);
+      cleanupMeshesFromScene(three.scene, VEGETATION_GEOMETRY_NAME);
     };
   }, [osmVegetation, referencePoint]);
   return <Button onClick={fetchAndApplyOsmVegetation}>Fetch OSM Parks</Button>;

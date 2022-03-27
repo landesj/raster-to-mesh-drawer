@@ -1,14 +1,16 @@
 import { useEffect, useMemo } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { LeafletBoundsState, DrawPolygonsSelector } from "../../raster/state";
+import { DrawPolygonsSelector } from "../../raster/state";
 import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
-import { getMercatorMapReferencePoint } from "../utils";
+import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 
 export const BUILDING_MATERIAL = new THREE.MeshLambertMaterial({
   color: "#ffffff",
 });
+
+const DRAWN_BUILDING_GEOMETRY_NAME = "DRAWN_BUILDING";
 
 export function DrawnBuildings() {
   const meshMapBounds = useRecoilValue(MeshBoundsState);
@@ -30,12 +32,15 @@ export function DrawnBuildings() {
       return;
     }
 
+    const { referencePointLat, referencePointLon } =
+      getLatLonFromString(referencePoint);
+
     drawnPolygons.forEach((polygonWithHeight) => {
       const vectors = polygonWithHeight.polygon.geometry.coordinates[0].map(
         (point) =>
           new THREE.Vector2(
-            point[1] - referencePoint.referencePointLon,
-            point[0] - referencePoint.referencePointLat
+            point[1] - referencePointLon,
+            point[0] - referencePointLat
           )
       );
       const polygonShape = new THREE.Shape(vectors);
@@ -43,12 +48,11 @@ export function DrawnBuildings() {
         depth: polygonWithHeight.height,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, BUILDING_MATERIAL);
+      buildingMesh.name = DRAWN_BUILDING_GEOMETRY_NAME;
       three.scene.add(buildingMesh);
       if (polygonWithHeight.height > three.camera.position.z) {
         three.camera.position.z = polygonWithHeight.height + 20;
       }
-      three.camera.position.x = vectors[0].x;
-      three.camera.position.y = vectors[1].y;
     });
     three.scene.remove(pointLight);
     pointLight.position.set(
@@ -60,7 +64,7 @@ export function DrawnBuildings() {
     three.renderer.render(three.scene, three.camera);
 
     return function cleanupScene() {
-      cleanupMeshesFromScene(three.scene);
+      cleanupMeshesFromScene(three.scene, DRAWN_BUILDING_GEOMETRY_NAME);
     };
   }, [drawnPolygons, referencePoint, pointLight]);
   return <></>;

@@ -15,17 +15,19 @@ export let three = {
   camera: new THREE.PerspectiveCamera(),
 };
 
-export function cleanupMeshesFromScene(scene: THREE.Scene) {
+export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
   for (let i = scene.children.length - 1; i >= 0; i--) {
-    if (scene.children[i].type === "Mesh") {
-      const mesh: THREE.Mesh = scene.children[i] as THREE.Mesh;
-      mesh.geometry.dispose();
-      // TODO: How to dispose of material
-      scene.remove(mesh);
-    } else if (scene.children[i].type === "Line") {
-      const line: THREE.Line = scene.children[i] as THREE.Line;
-      line.geometry.dispose();
-      scene.remove(line);
+    if (scene.children[i].name === name) {
+      if (scene.children[i].type === "Mesh") {
+        const mesh: THREE.Mesh = scene.children[i] as THREE.Mesh;
+        mesh.geometry.dispose();
+        // TODO: How to dispose of material
+        scene.remove(mesh);
+      } else if (scene.children[i].type === "Line") {
+        const line: THREE.Line = scene.children[i] as THREE.Line;
+        line.geometry.dispose();
+        scene.remove(line);
+      }
     }
   }
 }
@@ -60,7 +62,7 @@ function MeshPage() {
       0.1,
       10000
     );
-    camera.position.z = 60;
+    camera.position.z = 200;
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({
