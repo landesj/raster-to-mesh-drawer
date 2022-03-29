@@ -1,4 +1,5 @@
 import { LatLngBounds } from "leaflet";
+import * as turf from "turf";
 
 export type MapBounds = {
   latMin: number;
@@ -18,4 +19,17 @@ export function getMapBounds(mapBounds: LatLngBounds): MapBounds {
     lonMin: lonMin,
     lonMax: lonMax,
   };
+}
+
+export function getMapBoundsPolygon(bounds: MapBounds) {
+  const turfBoundsPolygon = turf.polygon([
+    [
+      [bounds.latMin, bounds.lonMin],
+      [bounds.latMin, bounds.lonMax],
+      [bounds.latMax, bounds.lonMax],
+      [bounds.latMax, bounds.lonMin],
+      [bounds.latMin, bounds.lonMin],
+    ],
+  ]);
+  return turfBoundsPolygon;
 }

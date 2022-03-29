@@ -1,5 +1,5 @@
 import { toMercator } from "@turf/projection";
-import { MapBounds } from "../mapUtils";
+import { getMapBoundsPolygon, MapBounds } from "../mapUtils";
 import * as turf from "turf";
 import { OsmElement, OsmFetchError, OSMResponse, OsmType } from "./types";
 import {
@@ -131,6 +131,9 @@ export async function fetchOsmRoads(
   bounds: MapBounds,
   setOsmRoads: React.Dispatch<React.SetStateAction<RoadGeometry[]>>
 ) {
+  const turfBoundsPolygon = getMapBoundsPolygon(bounds);
+  const turfBoundsPolygonMercator = toMercator(turfBoundsPolygon);
+
   const elements = await fetchDataFromOsm(OsmType.ROAD, bounds).then(
     (response: OSMResponse) => response.elements
   );
@@ -145,7 +148,10 @@ export async function fetchOsmRoads(
     (road) => road.coordinates.length > 0
   );
   const roadLinesMercator = nonEmptyRoadElements.map(({ coordinates }) =>
-    toMercator(turf.lineString(coordinates))
+    turf.intersect(
+      toMercator(turf.lineString(coordinates)),
+      turfBoundsPolygonMercator
+    )
   );
   setOsmRoads(roadLinesMercator);
 }
@@ -154,12 +160,19 @@ export async function fetchOsmVegetation(
   bounds: MapBounds,
   setOsmVegetation: React.Dispatch<React.SetStateAction<PolygonGeometry[]>>
 ) {
+  const turfBoundsPolygon = getMapBoundsPolygon(bounds);
+  const turfBoundsPolygonMercator = toMercator(turfBoundsPolygon);
+
   const vegetationGeometries = await fetchOsmPolygonsFromBounds(
     bounds,
     OsmType.PARK
   );
   const vegetationGeometriesMercator = vegetationGeometries.map(
-    ({ coordinates }) => toMercator(turf.polygon([coordinates]))
+    ({ coordinates }) =>
+      turf.intersect(
+        toMercator(turf.polygon([coordinates])),
+        turfBoundsPolygonMercator
+      ) as PolygonGeometry
   );
   setOsmVegetation(vegetationGeometriesMercator);
 }
