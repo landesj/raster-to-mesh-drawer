@@ -70,7 +70,17 @@ export function DrawingCanvas() {
         setHistoryIndexDebounced(historyIndex - 1);
       }
     };
-  }, [history, lines, points, setPointsDebounced, setLinesDebounced]);
+  }, [
+    history,
+    lines,
+    points,
+    setPointsDebounced,
+    setLinesDebounced,
+    historyIndex,
+    setHistory,
+    setLatestPointDebounced,
+    setHistoryIndexDebounced,
+  ]);
 
   useMapEvent("click", (event) => {
     let actions: DrawingAction[] = [];

@@ -1,10 +1,9 @@
-import { Button, Input, Label, Navbar } from "../style";
+import { Button, Navbar } from "../style";
 
 type Props = {
   changeIsDrawing: () => void;
   orderOsmBuildings: () => void;
   changeShowRasterState: () => void;
-  onInputChange: (files: FileList | null) => void;
   rasterState: ArrayBuffer | null;
   drawingButtonText: string;
   showRasterText: string;
@@ -14,7 +13,6 @@ export function RasterNavbar({
   changeIsDrawing,
   orderOsmBuildings,
   changeShowRasterState,
-  onInputChange,
   rasterState,
   drawingButtonText,
   showRasterText,
@@ -26,11 +24,6 @@ export function RasterNavbar({
       {rasterState !== null && (
         <Button onClick={changeShowRasterState}>{showRasterText}</Button>
       )}
-      <Label>Import GeoTiff File</Label>
-      <Input
-        id="tif_input"
-        onChange={(event) => onInputChange(event.target.files)}
-      />
     </Navbar>
   );
 }

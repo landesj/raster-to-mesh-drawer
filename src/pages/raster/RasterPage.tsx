@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./drawingCanvas/DrawingCanvas";
 import { fetchOsmBuildings } from "../../fetch/fetchOsm";
 import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
-import { Page } from "../style";
+import { Input, Label, Page } from "../style";
 import { useRecoilState } from "recoil";
 import { LeafletBoundsState, OsmBuildingsState } from "./state";
 import { RasterNavbar } from "./Navbar";
@@ -52,6 +52,14 @@ export function RasterPage() {
   const showRasterText = showRaster ? "Hide Raster" : "Show Raster";
   return (
     <Page>
+      <RasterNavbar
+        changeIsDrawing={changeIsDrawing}
+        orderOsmBuildings={orderOsmBuildings}
+        changeShowRasterState={changeShowRasterState}
+        rasterState={rasterState}
+        drawingButtonText={drawingButtonText}
+        showRasterText={showRasterText}
+      />
       <MapContainer
         center={[51.505, -0.09]}
         zoom={15}
@@ -70,15 +78,11 @@ export function RasterPage() {
         <SetMapBounds setBounds={setMapBounds} />
         {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
       </MapContainer>
-      <RasterNavbar
-        changeIsDrawing={changeIsDrawing}
-        orderOsmBuildings={orderOsmBuildings}
-        changeShowRasterState={changeShowRasterState}
-        onInputChange={onInputChange}
-        rasterState={rasterState}
-        drawingButtonText={drawingButtonText}
-        showRasterText={showRasterText}
+      <Input
+        id="tif_input"
+        onChange={(event) => onInputChange(event.target.files)}
       />
+      <Label>Import GeoTiff File</Label>
     </Page>
   );
 }

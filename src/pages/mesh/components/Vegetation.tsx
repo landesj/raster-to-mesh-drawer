@@ -39,8 +39,10 @@ export function Vegetation() {
           )
       );
       const shape = new THREE.Shape(vectors);
-      const geometry = new THREE.ShapeBufferGeometry(shape);
-      const mesh = new THREE.Mesh(geometry, VEGETATION_MATERIAL);
+      const extrudedGeometry = new THREE.ExtrudeBufferGeometry(shape, {
+        depth: 2,
+      });
+      const mesh = new THREE.Mesh(extrudedGeometry, VEGETATION_MATERIAL);
       mesh.name = VEGETATION_GEOMETRY_NAME;
       three.scene.add(mesh);
     });

@@ -8,11 +8,13 @@ export const Page = styled.div`
 `;
 
 export const Navbar = styled.div`
-  padding-top: 5px;
+  padding-bottom: 5px;
 `;
 
 export const Button = styled.button`
-  background-color: #3d9970;
+  background-color: #f0f0f0;
+  font-family: "Trebuchet MS"
+  font-size: 25px;
   height: 25px;
   width: 150px;
   border: none;
@@ -24,15 +26,19 @@ export const Button = styled.button`
 `;
 
 export const Label = styled.label.attrs({ for: "tif_input" })`
-  background-color: #3d9970;
+  background-color: #f0f0f0;
+  font-family: "Trebuchet MS"
+  font-size: 25px;
   text-align: center;
   width: 150px;
   display: inline-block;
   padding: 5px;
   border: none;
   border-radius: 8px;
-  margin-left: 10px;
-  margin-right: 10px;
+  padding-top: 5px;
+  margin-left: auto;
+  margin-right: 0;
+  margin-top: 5px;
   &:hover {
     background-color: lightblue;
   }

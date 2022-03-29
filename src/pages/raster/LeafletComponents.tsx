@@ -1,5 +1,4 @@
 import GeoRasterLayer from "georaster-layer-for-leaflet";
-import { LatLngBounds } from "leaflet";
 import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import { Polygon, useMap, useMapEvent } from "react-leaflet";
@@ -56,7 +55,7 @@ export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
       setGeoTiffState(georaster);
       setGeoRasterLayerShown(geoTiff);
     });
-  }, [rasterArrayBuffer, leafletMap, setGeoTiffState]);
+  }, [rasterArrayBuffer, leafletMap, setGeoTiffState, setMapBoundsState]);
 
   useEffect(() => {
     if (!showRaster && geoRasterLayerShown !== undefined) {

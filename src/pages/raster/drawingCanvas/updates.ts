@@ -6,7 +6,6 @@ import {
   DrawingAction,
   DrawingLineAction,
   DrawingPointAction,
-  GeometryType,
   HistoryState,
 } from "./types";
 
@@ -70,7 +69,7 @@ export function undoPointAction(
       const removedPoint = action.geometry;
       const pointsFiltered = points.filter(
         (point) =>
-          point.lat != removedPoint.lat && point.lng != removedPoint.lng
+          point.lat !== removedPoint.lat && point.lng !== removedPoint.lng
       );
       return pointsFiltered;
     }

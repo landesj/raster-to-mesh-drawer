@@ -5,6 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Page } from "../style";
 import { MeshNavbar } from "./Navbar";
 import { DrawnBuildings } from "./components/DrawnBuildings";
+import { Terrain } from "./components/Terrain";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
@@ -23,10 +24,6 @@ export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
         mesh.geometry.dispose();
         // TODO: How to dispose of material
         scene.remove(mesh);
-      } else if (scene.children[i].type === "Line") {
-        const line: THREE.Line = scene.children[i] as THREE.Line;
-        line.geometry.dispose();
-        scene.remove(line);
       }
     }
   }
@@ -48,7 +45,7 @@ function MeshPage() {
 
     // Create scene, add lighting
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#C8C8C8");
+    scene.background = new THREE.Color("#F8F8FF");
 
     const sceneAmbientLight = new THREE.AmbientLight(0x404040);
     const sceneDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -104,9 +101,10 @@ function MeshPage() {
 
   return (
     <Page>
+      <MeshNavbar />
       <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
       <DrawnBuildings />
-      <MeshNavbar />
+      <Terrain />
     </Page>
   );
 }

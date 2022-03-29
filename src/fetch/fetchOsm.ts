@@ -1,6 +1,5 @@
 import { toMercator } from "@turf/projection";
-import { LatLngBounds } from "leaflet";
-import { getMapBounds, MapBounds } from "../mapUtils";
+import { MapBounds } from "../mapUtils";
 import * as turf from "turf";
 import { OsmElement, OsmFetchError, OSMResponse, OsmType } from "./types";
 import {
