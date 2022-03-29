@@ -1,12 +1,14 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
+import * as turf from "turf";
 import { OsmRoadsState } from "../../raster/state";
 import { Button } from "../../style";
 import { fetchOsmRoads } from "../../../fetch/fetchOsm";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { MeshBoundsState } from "../../state";
+import { TurfPolygon } from "../../raster/drawingCanvas/types";
 
 const ROAD_MATERIAL = new THREE.LineBasicMaterial({
   color: "#191919",
@@ -35,17 +37,26 @@ export function Roads() {
       getLatLonFromString(referencePoint);
 
     osmRoads.forEach((road) => {
-      const vectors = road.geometry.coordinates.map(
+      const roadBuffered = turf.buffer(road, 2.0) as TurfPolygon;
+      const roadSimplified = turf.simplify(
+        roadBuffered,
+        0.01,
+        false
+      ) as TurfPolygon;
+      const vectors = roadSimplified.geometry.coordinates[0].map(
         (point) =>
           new THREE.Vector2(
             point[1] - referencePointLon,
             point[0] - referencePointLat
           )
       );
-      const geometry = new THREE.BufferGeometry().setFromPoints(vectors);
-      const line = new THREE.Line(geometry, ROAD_MATERIAL);
-      line.name = ROAD_GEOMETRY_NAME;
-      three.scene.add(line);
+      const shape = new THREE.Shape(vectors);
+      const extrudedGeometry = new THREE.ExtrudeBufferGeometry(shape, {
+        depth: 2,
+      });
+      const mesh = new THREE.Mesh(extrudedGeometry, ROAD_MATERIAL);
+      mesh.name = ROAD_GEOMETRY_NAME;
+      three.scene.add(mesh);
     });
     three.renderer.render(three.scene, three.camera);
     return function cleanupScene() {
