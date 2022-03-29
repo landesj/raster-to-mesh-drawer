@@ -196,9 +196,14 @@ export function removeOverlappingCycles(
   const polygons = cycles.map((cycle) => turf.polygon([[...cycle, cycle[0]]]));
   let removableIndices = [];
   for (let startIndex = 0; startIndex < polygons.length; startIndex += 1) {
-    const polygonStartArea = turf.area(polygons[startIndex]);
+    const polygonStart = polygons[startIndex];
+    const polygonStartArea = turf.area(polygonStart);
     for (let endIndex = 0; endIndex < polygons.length; endIndex += 1) {
       if (startIndex === endIndex) continue;
+      const polygonEnd = polygons[endIndex];
+      if (!booleanContains(polygonStart, polygonEnd)) {
+        continue;
+      }
       const polygonIntersection = turf.intersect(
         polygons[startIndex],
         polygons[endIndex]
