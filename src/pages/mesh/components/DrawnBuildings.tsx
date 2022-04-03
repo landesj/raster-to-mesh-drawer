@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import * as turf from "turf";
-import { DrawPolygonsSelector } from "../../raster/state";
+import { DrawPolygonsSelector, GroundPointState } from "../../raster/state";
 import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
@@ -14,6 +14,7 @@ export const BUILDING_MATERIAL = new THREE.MeshLambertMaterial({
 const DRAWN_BUILDING_GEOMETRY_NAME = "DRAWN_BUILDING";
 
 export function DrawnBuildings() {
+  const groundHeight = useRecoilValue(GroundPointState);
   const meshMapBounds = useRecoilValue(MeshBoundsState);
   const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
   const [isCameraSet, setCamera] = useState(false);
@@ -46,7 +47,7 @@ export function DrawnBuildings() {
       );
       const polygonShape = new THREE.Shape(vectors);
       const extrudedGeometry = new THREE.ExtrudeBufferGeometry(polygonShape, {
-        depth: polygonWithHeight.height,
+        depth: polygonWithHeight.height - groundHeight,
       });
       const buildingMesh = new THREE.Mesh(extrudedGeometry, BUILDING_MATERIAL);
       buildingMesh.name = DRAWN_BUILDING_GEOMETRY_NAME;

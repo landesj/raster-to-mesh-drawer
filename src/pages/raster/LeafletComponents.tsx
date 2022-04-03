@@ -4,11 +4,21 @@ import { useEffect, useState } from "react";
 import { Polygon, useMap, useMapEvent } from "react-leaflet";
 import { v4 as uuidv4 } from "uuid";
 import parseGeoraster from "georaster";
-import { SetterOrUpdater, useSetRecoilState } from "recoil";
-import { GeoTiffState } from "./state";
+import {
+  SetterOrUpdater,
+  useRecoilState,
+  useRecoilValue,
+  useSetRecoilState,
+} from "recoil";
+import {
+  GeoTiffState,
+  GroundPointListeningState,
+  GroundPointState,
+} from "./state";
 import { Geometry } from "./types";
 import { getMapBounds, MapBounds } from "../../mapUtils";
 import { MeshBoundsState } from "../state";
+import * as turf from "turf";
 
 type ImportProps = {
   rasterArrayBuffer: ArrayBuffer | null;
@@ -73,4 +83,49 @@ export function OsmBuildings({ buildings }: OsmProps) {
     return <Polygon key={uuidv4()} positions={building.coordinates} />;
   });
   return <>{leafletPolygons}</>;
+}
+
+export function SetGroundPoint() {
+  const georaster = useRecoilValue(GeoTiffState);
+  const setGroundHeight = useSetRecoilState(GroundPointState);
+  const [groundHeightListening, setGroundHeightListening] = useRecoilState(
+    GroundPointListeningState
+  );
+  useMapEvent("click", (event) => {
+    if (georaster === undefined || !groundHeightListening) return;
+    const groundPoint = turf.point([event.latlng.lat, event.latlng.lng]);
+    let minDistance: number = Infinity;
+    let groundHeight: number = Infinity;
+    for (
+      let x = georaster.xmin;
+      x < georaster.xmax;
+      x += georaster.pixelWidth
+    ) {
+      for (
+        let y = georaster.ymin;
+        y < georaster.ymax;
+        y += georaster.pixelHeight
+      ) {
+        const newPoint = turf.point([y, x]);
+        if (turf.distance(newPoint, groundPoint) < minDistance) {
+          const xPixelIndex = Math.round(
+            (x - georaster.xmin) / georaster.pixelWidth
+          );
+          const yPixelIndex = Math.round(
+            (georaster.ymax - y) / georaster.pixelHeight
+          );
+          if (
+            yPixelIndex >= georaster.values[0].length ||
+            xPixelIndex >= georaster.values[0][0].length
+          )
+            continue;
+          groundHeight = georaster.values[0][yPixelIndex][xPixelIndex];
+          minDistance = turf.distance(newPoint, groundPoint);
+        }
+      }
+    }
+    setGroundHeight(groundHeight);
+    setGroundHeightListening(false);
+  });
+  return <></>;
 }

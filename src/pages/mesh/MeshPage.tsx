@@ -6,6 +6,8 @@ import { Page } from "../style";
 import { MeshNavbar } from "./Navbar";
 import { DrawnBuildings } from "./components/DrawnBuildings";
 import { Terrain } from "./components/Terrain";
+import { useRecoilValue } from "recoil";
+import { GroundPointState } from "../raster/state";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
@@ -30,6 +32,7 @@ export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
 }
 
 function MeshPage() {
+  const groundHeight = useRecoilValue(GroundPointState);
   const ref = useRef<HTMLCanvasElement>(null);
 
   const pointLight = useMemo(() => {
@@ -99,12 +102,15 @@ function MeshPage() {
     });
   }, [pointLight]);
 
+  const groundHeightText = `Ground elevation is: ${groundHeight.toFixed(2)}`;
+
   return (
     <Page>
       <MeshNavbar />
       <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
       <DrawnBuildings />
       <Terrain />
+      <p>{groundHeightText}</p>
     </Page>
   );
 }

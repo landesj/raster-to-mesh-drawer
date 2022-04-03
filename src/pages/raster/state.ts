@@ -42,6 +42,16 @@ export const DrawnLinesState = atom<LineType[]>({
   default: [],
 });
 
+export const GroundPointListeningState = atom<boolean>({
+  key: "GroundPointListeningState",
+  default: false,
+});
+
+export const GroundPointState = atom<number>({
+  key: "GroundPointState",
+  default: 0,
+});
+
 export const DrawPolygonsSelector = selector({
   key: "DrawnPolygonsSelector",
   get: ({ get }) => {
@@ -69,7 +79,7 @@ export const DrawPolygonsSelector = selector({
   },
 });
 
-export const GeoTiffState = atom({
+export const GeoTiffState = atom<any>({
   key: "GeoTiffState",
   default: undefined,
 });

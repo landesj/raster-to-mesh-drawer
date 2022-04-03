@@ -3,15 +3,25 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./drawingCanvas/DrawingCanvas";
 import { fetchOsmBuildings } from "../../fetch/fetchOsm";
-import { OsmBuildings, RasterImport, SetMapBounds } from "./LeafletComponents";
+import {
+  OsmBuildings,
+  RasterImport,
+  SetGroundPoint,
+  SetMapBounds,
+} from "./LeafletComponents";
 import { Input, Label, Page } from "../style";
-import { useRecoilState } from "recoil";
-import { LeafletBoundsState, OsmBuildingsState } from "./state";
+import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  GroundPointListeningState,
+  LeafletBoundsState,
+  OsmBuildingsState,
+} from "./state";
 import { RasterNavbar } from "./Navbar";
 
 export const CANVAS_HEIGHT = "90vh";
 
 export function RasterPage() {
+  const isGroundPointListening = useRecoilValue(GroundPointListeningState);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
@@ -73,9 +83,10 @@ export function RasterPage() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={25}
         />
-        {isDrawing && <DrawingCanvas />}
+        {isDrawing && !isGroundPointListening && <DrawingCanvas />}
         <RasterImport rasterArrayBuffer={rasterState} showRaster={showRaster} />
         <SetMapBounds setBounds={setMapBounds} />
+        <SetGroundPoint />
         {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
       </MapContainer>
       <Input
