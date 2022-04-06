@@ -51,5 +51,5 @@ export function Vegetation() {
       cleanupMeshesFromScene(three.scene, VEGETATION_GEOMETRY_NAME);
     };
   }, [osmVegetation, referencePoint]);
-  return <Button onClick={fetchAndApplyOsmVegetation}>Fetch OSM Parks</Button>;
+  return <Button onClick={fetchAndApplyOsmVegetation}>Fetch Parks</Button>;
 }

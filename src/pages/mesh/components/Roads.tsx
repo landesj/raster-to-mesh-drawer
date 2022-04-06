@@ -63,5 +63,5 @@ export function Roads() {
       cleanupMeshesFromScene(three.scene, ROAD_GEOMETRY_NAME);
     };
   }, [osmRoads, referencePoint]);
-  return <Button onClick={fetchAndApplyOsmRoads}>Fetch OSM Roads</Button>;
+  return <Button onClick={fetchAndApplyOsmRoads}>Fetch Roads</Button>;
 }

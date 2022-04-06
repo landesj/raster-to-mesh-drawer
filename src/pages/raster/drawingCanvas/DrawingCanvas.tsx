@@ -145,7 +145,7 @@ export function DrawingCanvas() {
     Line({ key: uuidv4(), line: line })
   );
   return (
-    <div onKeyDown={() => console.log("ha")}>
+    <div>
       {drawnPoints}
       {drawnLines}
     </div>

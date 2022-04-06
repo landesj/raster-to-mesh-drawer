@@ -9,7 +9,7 @@ export function MapPoint(props: Props) {
     <Circle
       key={props.key}
       center={[lat, lng]}
-      pathOptions={{ fillColor: "#0000FF" }}
+      pathOptions={{ fillColor: "black", color: "black" }}
       radius={1}
     />
   );
