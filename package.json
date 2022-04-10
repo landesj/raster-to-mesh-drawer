@@ -20,6 +20,7 @@
     "@types/turf": "^3.5.32",
     "@types/styled-components": "5.1.21",
     "@types/uuid": "^8.3.4",
+    "earcut": "^2.2.3",
     "lodash": "^4.17.21",
     "file-saver": "^2.0.5",
     "geojson": "^0.5.0",

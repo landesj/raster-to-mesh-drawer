@@ -1,18 +1,21 @@
 import { TurfPolygon } from "../raster/drawingCanvas/types";
 import { saveAs } from "file-saver";
+import earcut from "earcut";
 
 export type TurfPolygonWithHeight = {
   polygon: TurfPolygon;
   height: number;
 };
 
-function _addSurfaceFace(vertices: number[]) {
-  let face = "f";
-  vertices.forEach((vertexNumber) => {
-    face = face + ` ${vertexNumber}`;
-  });
-  face = face + "\n";
-  return face;
+function _addSurfaceFace(vertices: number[], triangles: number[]) {
+  let faces = "";
+  for (let startIndex = 0; startIndex < triangles.length; startIndex += 3) {
+    const face = `f ${vertices[triangles[startIndex]]} ${
+      vertices[triangles[startIndex + 1]]
+    } ${vertices[triangles[startIndex + 2]]}\n`;
+    faces = faces + face;
+  }
+  return faces;
 }
 
 function _addFacadeFaces(groundVertices: number[], roofVertices: number[]) {
@@ -43,6 +46,10 @@ export function handleMeshExport(
   drawnBuildings.forEach((drawnBuilding) => {
     let groundVertices: number[] = [];
     let roofVertices: number[] = [];
+    const polygonCoords = drawnBuilding.polygon.geometry.coordinates[0].flatMap(
+      (c) => c
+    );
+    const triangles = earcut(polygonCoords);
     drawnBuilding.polygon.geometry.coordinates[0].forEach((coord) => {
       const vGround = `v ${coord[0]} ${coord[1]} ${groundHeight}\n`;
       groundVertices.push(numVertices);
@@ -52,10 +59,10 @@ export function handleMeshExport(
       numVertices += 1;
       objString = objString + vGround + vRoof;
     });
-    const groundFace = _addSurfaceFace(groundVertices);
-    const roofFace = _addSurfaceFace(roofVertices);
+    const groundFaces = _addSurfaceFace(groundVertices, triangles);
+    const roofFaces = _addSurfaceFace(roofVertices, triangles);
     const facadeFaces = _addFacadeFaces(groundVertices, roofVertices);
-    objString = objString + groundFace + roofFace + facadeFaces;
+    objString = objString + groundFaces + roofFaces + facadeFaces;
   });
   const blob = new Blob([objString], { type: "text/plain;charset=utf-8" });
   saveAs(blob, "buildings.obj");
