@@ -19,6 +19,11 @@ export let three = {
   camera: new THREE.PerspectiveCamera(),
 };
 
+export let orbitControls = new OrbitControls(
+  new THREE.PerspectiveCamera(),
+  new THREE.WebGLRenderer().domElement
+);
+
 export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
   for (let i = scene.children.length - 1; i >= 0; i--) {
     if (scene.children[i].name === name) {
@@ -81,11 +86,10 @@ function MeshPage() {
 
   useEffect(() => {
     const canvas = ref.current!;
-    const orbit = new OrbitControls(three.camera, canvas);
+    orbitControls = new OrbitControls(three.camera, canvas);
     let animationId: number;
     function animate() {
       animationId = requestAnimationFrame(animate);
-      orbit.update();
       three.scene.remove(pointLight);
       pointLight.position.set(
         three.camera.position.x,
@@ -93,7 +97,7 @@ function MeshPage() {
         three.camera.position.z
       );
       three.scene.add(pointLight);
-      orbit.update();
+      orbitControls.update();
       three.renderer.render(three.scene, three.camera);
     }
     canvas.addEventListener("mouseover", () => {

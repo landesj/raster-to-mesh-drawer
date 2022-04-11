@@ -4,7 +4,7 @@ import * as THREE from "three";
 import * as turf from "turf";
 import { DrawPolygonsSelector, GroundPointState } from "../../raster/state";
 import { MeshBoundsState } from "../../state";
-import { cleanupMeshesFromScene, three } from "../MeshPage";
+import { cleanupMeshesFromScene, orbitControls, three } from "../MeshPage";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 
 export const BUILDING_MATERIAL = new THREE.MeshLambertMaterial({
@@ -54,6 +54,7 @@ export function DrawnBuildings() {
       three.scene.add(buildingMesh);
       if (polygonWithHeight.height > three.camera.position.z) {
         three.camera.position.z = polygonWithHeight.height + 20;
+        orbitControls.update();
       }
     });
 
@@ -64,7 +65,8 @@ export function DrawnBuildings() {
       const bbox = turf.bbox(featureCollection);
       const yPosition = (bbox[2] + bbox[0]) / 2 - referencePointLat;
       const xPosition = (bbox[3] + bbox[1]) / 2 - referencePointLon;
-      three.camera.position.set(xPosition, yPosition, 100);
+      orbitControls.target.set(xPosition, yPosition, 0);
+      orbitControls.update();
 
       setCamera(true);
     }
