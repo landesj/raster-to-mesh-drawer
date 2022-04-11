@@ -37,7 +37,7 @@ export function Roads() {
       getLatLonFromString(referencePoint);
 
     osmRoads.forEach((road) => {
-      const roadBuffered = turf.buffer(road, 2.0) as TurfPolygon;
+      const roadBuffered = turf.buffer(road, 10.0) as TurfPolygon;
       const roadSimplified = turf.simplify(
         roadBuffered,
         0.01,
@@ -52,7 +52,7 @@ export function Roads() {
       );
       const shape = new THREE.Shape(vectors);
       const extrudedGeometry = new THREE.ExtrudeBufferGeometry(shape, {
-        depth: 2,
+        depth: 1.0,
       });
       const mesh = new THREE.Mesh(extrudedGeometry, ROAD_MATERIAL);
       mesh.name = ROAD_GEOMETRY_NAME;
