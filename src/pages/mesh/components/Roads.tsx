@@ -37,7 +37,7 @@ export function Roads() {
       getLatLonFromString(referencePoint);
 
     osmRoads.forEach((road) => {
-      const roadBuffered = turf.buffer(road, 10.0) as TurfPolygon;
+      const roadBuffered = turf.buffer(road, 3.0) as TurfPolygon;
       const roadSimplified = turf.simplify(
         roadBuffered,
         0.01,
