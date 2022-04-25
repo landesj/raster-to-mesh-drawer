@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Page } from "../style";
 import { MeshNavbar } from "./Navbar";
 import { DrawnBuildings } from "./components/DrawnBuildings";
