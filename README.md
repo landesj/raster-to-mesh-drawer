@@ -8,3 +8,8 @@ To test out, clone this repository then install dependencies and start the local
 yarn install
 yarn start
 ```
+
+For a peek at the functionality check out this video: (Sorry about the length, GitHub has a max 10MB for README embedded files)
+
+https://user-images.githubusercontent.com/53230230/165003095-e30ae8ba-f3c9-4383-8640-94108424799b.mov
+
