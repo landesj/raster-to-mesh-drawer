@@ -15,10 +15,10 @@ import {
   GroundPointListeningState,
   GroundPointState,
 } from "./state";
-import { Geometry } from "./types";
 import { getMapBounds, MapBounds } from "../../mapUtils";
 import { MeshBoundsState } from "../state";
 import * as turf from "turf";
+import { Coordinates } from "./types";
 
 type ImportProps = {
   rasterArrayBuffer: ArrayBuffer | null;
@@ -30,7 +30,7 @@ type SetBoundsProps = {
 };
 
 type OsmProps = {
-  buildings: Geometry[];
+  buildings: Coordinates[];
 };
 
 export function SetMapBounds({ setBounds }: SetBoundsProps) {
@@ -80,7 +80,7 @@ export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
 
 export function OsmBuildings({ buildings }: OsmProps) {
   const leafletPolygons = buildings.map((building) => {
-    return <Polygon key={uuidv4()} positions={building.coordinates} />;
+    return <Polygon key={uuidv4()} positions={building} />;
   });
   return <>{leafletPolygons}</>;
 }

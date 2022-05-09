@@ -36,7 +36,7 @@ export function OsmBuildings() {
       getLatLonFromString(referencePoint);
 
     osmBuildings.forEach((osmBuilding) => {
-      const osmVectors = osmBuilding.coordinates.map(
+      const osmVectors = osmBuilding.map(
         (point) =>
           new THREE.Vector2(
             point[1] - referencePointLon,

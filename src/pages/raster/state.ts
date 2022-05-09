@@ -8,11 +8,11 @@ import {
   removeOverlappingCycles,
 } from "./drawingCanvas/cycleUtils";
 import { toMercator } from "@turf/projection";
-import { BuildingGeometry, PolygonGeometry, RoadGeometry } from "./types";
+import { Coordinates, PolygonGeometry, RoadGeometry } from "./types";
 import { Graph } from "./drawingCanvas/types";
 import { MapBounds } from "../../mapUtils";
 
-export const OsmBuildingsState = atom<BuildingGeometry[]>({
+export const OsmBuildingsState = atom<Coordinates[]>({
   key: "OsmBuildingsState",
   default: [],
 });

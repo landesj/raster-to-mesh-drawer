@@ -3,7 +3,6 @@ import { getMapBoundsPolygon, MapBounds } from "../mapUtils";
 import * as turf from "turf";
 import { OsmElement, OsmFetchError, OSMResponse, OsmType } from "./types";
 import {
-  BuildingGeometry,
   Coordinates,
   PolygonGeometry,
   RoadGeometry,
@@ -18,7 +17,7 @@ const HIGHWAY_WHITELIST = [
   "motorway",
 ];
 
-async function fetchOsmData(url: string) {
+async function fetchOsm(url: string) {
   const responseJson = await fetch(url).then((response) => {
     if (response.status !== 200) {
       alert("Unable to fetch OSM data for this location.");
@@ -33,28 +32,28 @@ async function fetchOsmData(url: string) {
   return responseJson;
 }
 
-async function fetchParksFromOsm({
+async function fetchParksGivenBounds({
   latMin,
   latMax,
   lonMin,
   lonMax,
 }: MapBounds) {
   const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['leisure'='park'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
-  return fetchOsmData(requestUrl);
+  return fetchOsm(requestUrl);
 }
 
-async function fetchDataFromOsm(
+async function fetchDataTypeGivenBounds(
   dataType: string,
   { latMin, latMax, lonMin, lonMax }: MapBounds
 ) {
   const requestUrl = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(way['${dataType}'](${latMin},${lonMin},${latMax},${lonMax}););out body;>;out skel qt;`;
-  return fetchOsmData(requestUrl);
+  return fetchOsm(requestUrl);
 }
 
-function getGeometry(
+function getPolygonGeometry(
   element: OsmElement,
   nodeIdToLatLon: Map<number, [number, number]>
-) {
+): Coordinates {
   let coordinates: Coordinates = [];
   if (element.type === "way") {
     element.nodes.forEach((value) => {
@@ -64,15 +63,13 @@ function getGeometry(
       }
     });
   }
-  return {
-    coordinates: coordinates,
-  };
+  return coordinates;
 }
 
 function getRoadGeometry(
   element: OsmElement,
   nodeIdToLatLon: Map<number, [number, number]>
-) {
+): Coordinates {
   let coordinates: Coordinates = [];
   if (element.type === "way") {
     if (
@@ -87,19 +84,17 @@ function getRoadGeometry(
       });
     }
   }
-  return {
-    coordinates: coordinates,
-  };
+  return coordinates;
 }
 
 async function fetchOsmPolygonsFromBounds(bounds: MapBounds, type: OsmType) {
   let elements;
   if (type === OsmType.BUILDING) {
-    elements = await fetchDataFromOsm(type, bounds).then(
+    elements = await fetchDataTypeGivenBounds(type, bounds).then(
       (response: OSMResponse) => response.elements
     );
   } else {
-    elements = await fetchParksFromOsm(bounds).then(
+    elements = await fetchParksGivenBounds(bounds).then(
       (response: OSMResponse) => response.elements
     );
   }
@@ -108,17 +103,17 @@ async function fetchOsmPolygonsFromBounds(bounds: MapBounds, type: OsmType) {
     if (node.type === "node") nodeIdToLatLon.set(node.id, [node.lat, node.lon]);
   });
   const geometries = elements.map((element) => {
-    return getGeometry(element, nodeIdToLatLon);
+    return getPolygonGeometry(element, nodeIdToLatLon);
   });
   const nonEmptyBuildingElements = geometries.filter(
-    (geometry) => geometry.coordinates.length > 0
+    (geometry) => geometry.length > 0
   );
   return nonEmptyBuildingElements;
 }
 
 export async function fetchOsmBuildings(
   bounds: MapBounds,
-  setOsmBuildings: React.Dispatch<React.SetStateAction<BuildingGeometry[]>>
+  setOsmBuildings: React.Dispatch<React.SetStateAction<Coordinates[]>>
 ) {
   const buildingGeometries = await fetchOsmPolygonsFromBounds(
     bounds,
@@ -134,7 +129,7 @@ export async function fetchOsmRoads(
   const turfBoundsPolygon = getMapBoundsPolygon(bounds);
   const turfBoundsPolygonMercator = toMercator(turfBoundsPolygon);
 
-  const elements = await fetchDataFromOsm(OsmType.ROAD, bounds).then(
+  const elements = await fetchDataTypeGivenBounds(OsmType.ROAD, bounds).then(
     (response: OSMResponse) => response.elements
   );
   const nodeIdToLatLon = new Map<number, [number, number]>();
@@ -144,10 +139,8 @@ export async function fetchOsmRoads(
   const roadElements = elements.map((element) => {
     return getRoadGeometry(element, nodeIdToLatLon);
   });
-  const nonEmptyRoadElements = roadElements.filter(
-    (road) => road.coordinates.length > 0
-  );
-  const roadLinesMercator = nonEmptyRoadElements.map(({ coordinates }) =>
+  const nonEmptyRoadElements = roadElements.filter((road) => road.length > 0);
+  const roadLinesMercator = nonEmptyRoadElements.map((coordinates) =>
     turf.intersect(
       toMercator(turf.lineString(coordinates)),
       turfBoundsPolygonMercator
@@ -168,7 +161,7 @@ export async function fetchOsmVegetation(
     OsmType.PARK
   );
   const vegetationGeometriesMercator = vegetationGeometries.map(
-    ({ coordinates }) =>
+    (coordinates) =>
       turf.intersect(
         toMercator(turf.polygon([coordinates])),
         turfBoundsPolygonMercator
