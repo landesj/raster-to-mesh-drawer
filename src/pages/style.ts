@@ -9,6 +9,7 @@ export const Page = styled.div`
 
 export const Navbar = styled.div`
   padding-bottom: 5px;
+  height: 25px;
 `;
 
 export const Button = styled.button`

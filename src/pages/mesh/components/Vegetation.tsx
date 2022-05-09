@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
 import { OsmVegetationState } from "../../raster/state";
@@ -12,6 +12,7 @@ const VEGETATION_MATERIAL = new THREE.MeshBasicMaterial({ color: "#AFE1AF" });
 const VEGETATION_GEOMETRY_NAME = "VEGETATION";
 
 export function Vegetation() {
+  const [vegetationOrdered, setVegetationOrdered] = useState(false);
   const meshMapBounds = useRecoilValue(MeshBoundsState);
   const [osmVegetation, setOsmVegetation] = useRecoilState(OsmVegetationState);
 
@@ -20,6 +21,7 @@ export function Vegetation() {
       alert("Cannot fetch OSM vegetation");
     } else {
       fetchOsmVegetation(meshMapBounds.bounds, setOsmVegetation);
+      setVegetationOrdered(true);
     }
   };
 
@@ -51,5 +53,11 @@ export function Vegetation() {
       cleanupMeshesFromScene(three.scene, VEGETATION_GEOMETRY_NAME);
     };
   }, [osmVegetation, referencePoint]);
-  return <Button onClick={fetchAndApplyOsmVegetation}>Fetch Parks</Button>;
+  return (
+    <>
+      {!vegetationOrdered && (
+        <Button onClick={fetchAndApplyOsmVegetation}>Fetch Parks</Button>
+      )}
+    </>
+  );
 }

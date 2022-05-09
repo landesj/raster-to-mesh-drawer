@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
 import * as turf from "turf";
@@ -17,6 +17,7 @@ const ROAD_MATERIAL = new THREE.LineBasicMaterial({
 const ROAD_GEOMETRY_NAME = "ROAD";
 
 export function Roads() {
+  const [roadsOrdered, setRoadsOrdered] = useState(false);
   const meshMapBounds = useRecoilValue(MeshBoundsState);
   const [osmRoads, setOsmRoads] = useRecoilState(OsmRoadsState);
 
@@ -25,6 +26,7 @@ export function Roads() {
       alert("Cannot fetch OSM roads");
     } else {
       fetchOsmRoads(meshMapBounds.bounds, setOsmRoads);
+      setRoadsOrdered(true);
     }
   };
 
@@ -63,5 +65,11 @@ export function Roads() {
       cleanupMeshesFromScene(three.scene, ROAD_GEOMETRY_NAME);
     };
   }, [osmRoads, referencePoint]);
-  return <Button onClick={fetchAndApplyOsmRoads}>Fetch Roads</Button>;
+  return (
+    <>
+      {!roadsOrdered && (
+        <Button onClick={fetchAndApplyOsmRoads}>Fetch Roads</Button>
+      )}
+    </>
+  );
 }
