@@ -83,6 +83,6 @@ export function DrawnBuildings() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene, DRAWN_BUILDING_GEOMETRY_NAME);
     };
-  }, [drawnPolygons, referencePoint, pointLight, isCameraSet]);
+  }, [drawnPolygons, referencePoint, pointLight, isCameraSet, groundHeight]);
   return <></>;
 }
