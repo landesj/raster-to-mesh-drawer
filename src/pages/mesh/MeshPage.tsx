@@ -7,7 +7,11 @@ import { MeshNavbar } from "./Navbar";
 import { DrawnBuildings } from "./components/DrawnBuildings";
 import { Terrain } from "./components/Terrain";
 import { useRecoilValue } from "recoil";
-import { DrawPolygonsSelector, GroundPointState } from "../raster/state";
+import {
+  DrawPolygonsSelector,
+  GroundPointState,
+  ProjectSetupState,
+} from "../raster/state";
 import { BottomPanel } from "./BottomPanel";
 
 export const canvasSize = 1000;
@@ -40,6 +44,7 @@ export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
 function MeshPage() {
   const groundHeight = useRecoilValue(GroundPointState);
   const drawnBuildings = useRecoilValue(DrawPolygonsSelector);
+  const isProjectSetup = useRecoilValue(ProjectSetupState);
   const ref = useRef<HTMLCanvasElement>(null);
 
   const pointLight = useMemo(() => {
@@ -110,14 +115,16 @@ function MeshPage() {
 
   return (
     <Page>
-      <MeshNavbar />
+      {isProjectSetup && <MeshNavbar />}
       <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
       <DrawnBuildings />
       <Terrain />
-      <BottomPanel
-        groundHeight={groundHeight}
-        drawnBuildings={drawnBuildings}
-      />
+      {isProjectSetup && (
+        <BottomPanel
+          groundHeight={groundHeight}
+          drawnBuildings={drawnBuildings}
+        />
+      )}
     </Page>
   );
 }

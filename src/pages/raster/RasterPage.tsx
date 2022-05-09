@@ -15,6 +15,7 @@ import {
   GroundPointListeningState,
   LeafletBoundsState,
   OsmBuildingsState,
+  ProjectSetupState,
 } from "./state";
 import { RasterNavbar } from "./Navbar";
 
@@ -27,6 +28,7 @@ export function RasterPage() {
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
   const [mapBounds, setMapBounds] = useRecoilState(LeafletBoundsState);
   const [showRaster, setShowRaster] = useState<boolean>(true);
+  const [isProjectSetup, setProjectSetup] = useRecoilState(ProjectSetupState);
 
   const onInputChange = (files: FileList | null) => {
     if (files !== null) {
@@ -38,6 +40,7 @@ export function RasterPage() {
       reader.readAsArrayBuffer(file);
       reader.onloadend = () => {
         setRasterState(reader.result as ArrayBuffer);
+        setProjectSetup(true);
       };
     }
   };
@@ -62,14 +65,16 @@ export function RasterPage() {
   const showRasterText = showRaster ? "Hide Raster" : "Show Raster";
   return (
     <Page>
-      <RasterNavbar
-        changeIsDrawing={changeIsDrawing}
-        orderOsmBuildings={orderOsmBuildings}
-        changeShowRasterState={changeShowRasterState}
-        rasterState={rasterState}
-        drawingButtonText={drawingButtonText}
-        showRasterText={showRasterText}
-      />
+      {isProjectSetup && (
+        <RasterNavbar
+          changeIsDrawing={changeIsDrawing}
+          orderOsmBuildings={orderOsmBuildings}
+          changeShowRasterState={changeShowRasterState}
+          rasterState={rasterState}
+          drawingButtonText={drawingButtonText}
+          showRasterText={showRasterText}
+        />
+      )}
       <MapContainer
         center={[51.505, -0.09]}
         zoom={15}
@@ -89,11 +94,15 @@ export function RasterPage() {
         <SetGroundPoint />
         {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
       </MapContainer>
-      <Input
-        id="tif_input"
-        onChange={(event) => onInputChange(event.target.files)}
-      />
-      <Label>Import GeoTiff File</Label>
+      {!isProjectSetup && (
+        <>
+          <Input
+            id="tif_input"
+            onChange={(event) => onInputChange(event.target.files)}
+          />
+          <Label>Import GeoTiff File</Label>
+        </>
+      )}
     </Page>
   );
 }

@@ -52,6 +52,11 @@ export const GroundPointState = atom<number>({
   default: 0,
 });
 
+export const ProjectSetupState = atom<boolean>({
+  key: "ProjectSetupState",
+  default: false,
+});
+
 export const DrawPolygonsSelector = selector({
   key: "DrawnPolygonsSelector",
   get: ({ get }) => {
