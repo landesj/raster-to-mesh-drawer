@@ -78,7 +78,7 @@ export function RasterPage() {
       <MapContainer
         center={[51.505, -0.09]}
         zoom={15}
-        style={{ height: CANVAS_HEIGHT, width: "100%", cursor: "default" }}
+        style={{ height: CANVAS_HEIGHT, width: "100%", cursor: "pointer" }}
         minZoom={1}
         maxZoom={25}
         maxNativeZoom={25}
