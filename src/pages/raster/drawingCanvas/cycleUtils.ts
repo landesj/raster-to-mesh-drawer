@@ -1,6 +1,6 @@
 import * as turf from "turf";
 import booleanContains from "@turf/boolean-contains";
-import { Feature, GeoJsonProperties, Polygon } from "geojson";
+import { Feature, GeoJsonProperties, Polygon, Position } from "geojson";
 import { Cycle, Graph, PathQueue, PolygonWithHeight } from "./types";
 
 const INTERSECTION_AREA_THRESHOLD = 0.0001;
@@ -31,6 +31,22 @@ function _createSpanningTree(adjacencyGraph: Graph) {
     }
   });
   return spanningTree;
+}
+
+function calculatePolygonArea(vertices: Position[]) {
+  let area = 0;
+  const numVertices = vertices.length - 1; // Exclude the last vertex since it's the same as the first
+
+  for (let i = 0; i < numVertices; i++) {
+    const x1 = vertices[i][0];
+    const y1 = vertices[i][1];
+    const x2 = vertices[i + 1][0];
+    const y2 = vertices[i + 1][1];
+
+    area += x1 * y2 - y1 * x2;
+  }
+
+  return Math.abs(area) / 2;
 }
 
 function _findCycleFromEdge(
@@ -197,7 +213,9 @@ export function removeOverlappingCycles(
   let removableIndices = [];
   for (let startIndex = 0; startIndex < polygons.length; startIndex += 1) {
     const polygonStart = polygons[startIndex];
-    const polygonStartArea = turf.area(polygonStart);
+    const polygonStartArea = calculatePolygonArea(
+      polygonStart.geometry.coordinates[0]
+    );
     for (let endIndex = 0; endIndex < polygons.length; endIndex += 1) {
       if (startIndex === endIndex) continue;
       const polygonEnd = polygons[endIndex];
@@ -208,8 +226,13 @@ export function removeOverlappingCycles(
         polygons[startIndex],
         polygons[endIndex]
       );
-      if (polygonIntersection) {
-        const polygonIntersectionArea = turf.area(polygonIntersection);
+      if (
+        polygonIntersection &&
+        polygonIntersection.geometry.type === "Polygon"
+      ) {
+        const polygonIntersectionArea = calculatePolygonArea(
+          polygonIntersection.geometry.coordinates[0]
+        );
         if (
           polygonIntersectionArea > 0 &&
           Math.abs(polygonStartArea - polygonIntersectionArea) >

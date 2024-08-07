@@ -37,18 +37,17 @@
     "@types/three": "^0.137.0",
     "@types/turf": "^3.5.32",
     "@types/uuid": "^8.3.4",
-    "esbuild": "^0.14.38"
+    "@vitejs/plugin-react": "^4.3.1",
+    "esbuild": "^0.14.38",
+    "vite": "^5.3.4"
   },
   "scripts": {
-    "start": "react-scripts --max_old_space_size=8192 start",
-    "build": "esbuild src/index.tsx --bundle --loader:.png=file --outdir=dist",
-    "deploy": "gh-pages -d dist",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "vite build"
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
