@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./drawingCanvas/DrawingCanvas";
@@ -10,8 +10,11 @@ import {
   SetMapBounds,
 } from "./LeafletComponents";
 import { Input, Label, Page } from "../style";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
+  DrawnLinesState,
+  DrawnPolygonsState,
+  GeoTiffState,
   GroundPointListeningState,
   LeafletBoundsState,
   OsmBuildingsState,
@@ -20,6 +23,8 @@ import {
 import { RasterNavbar } from "./Navbar";
 
 export const CANVAS_HEIGHT = "90vh";
+const workerUrl = new URL("./drawingCanvas/cycleWorker.ts", import.meta.url)
+  .href;
 
 export function RasterPage() {
   const isGroundPointListening = useRecoilValue(GroundPointListeningState);
@@ -29,6 +34,38 @@ export function RasterPage() {
   const [mapBounds, setMapBounds] = useRecoilState(LeafletBoundsState);
   const [showRaster, setShowRaster] = useState<boolean>(true);
   const [isProjectSetup, setProjectSetup] = useRecoilState(ProjectSetupState);
+  const drawnLines = useRecoilValue(DrawnLinesState);
+  const georaster = useRecoilValue(GeoTiffState);
+  const setDrawnPolygonsState = useSetRecoilState(DrawnPolygonsState);
+
+  useEffect(() => {
+    const worker = new Worker(workerUrl, { type: "module" });
+
+    // Define the function to handle messages from the worker
+    worker.onmessage = (event) => {
+      setDrawnPolygonsState(event.data.polygons);
+    };
+
+    // Send a message to the worker
+    if (georaster !== undefined) {
+      worker.postMessage({
+        drawnLines,
+        georaster: {
+          values: georaster.values,
+          pixelHeight: georaster.pixelHeight,
+          pixelWidth: georaster.pixelHeight,
+          noDataValue: georaster.noDataValue,
+          xmin: georaster.xmin,
+          ymax: georaster.ymax,
+        },
+      });
+    }
+
+    // Clean up the worker when the component unmounts
+    return () => {
+      worker.terminate();
+    };
+  }, [drawnLines, georaster, setDrawnPolygonsState]);
 
   const onInputChange = (files: FileList | null) => {
     if (files !== null) {

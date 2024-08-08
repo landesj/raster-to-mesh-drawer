@@ -6,10 +6,10 @@ import {
   filterDuplicateCycles,
   findCycles,
   removeOverlappingCycles,
-} from "./drawingCanvas/cycleUtils";
+} from "./drawingCanvas/cycleWorker";
 import { toMercator } from "@turf/projection";
 import { Coordinates, PolygonGeometry, RoadGeometry } from "./types";
-import { Graph } from "./drawingCanvas/types";
+import { Graph, TurfPolygon } from "./drawingCanvas/types";
 import { MapBounds } from "../../mapUtils";
 
 export const OsmBuildingsState = atom<Coordinates[]>({
@@ -57,31 +57,14 @@ export const ProjectSetupState = atom<boolean>({
   default: false,
 });
 
-export const DrawPolygonsSelector = selector({
-  key: "DrawnPolygonsSelector",
-  get: ({ get }) => {
-    const drawnLines = get(DrawnLinesState);
-    const georaster = get(GeoTiffState);
-    if (georaster === undefined) return [];
-    const adjacencyGraph = new Graph();
-    adjacencyGraph.createGraphFromListOfLines(drawnLines);
-    const cycles = findCycles(adjacencyGraph);
-    const uniqueCycles = filterDuplicateCycles(cycles);
-    const distinctPolygons = removeOverlappingCycles(uniqueCycles);
-    const polygonsWithHeight = fetchHeightFromRaster(
-      distinctPolygons,
-      georaster
-    );
-    const polygonsWithHeightTranslated = polygonsWithHeight.map(
-      ({ polygon, height }) => {
-        return {
-          polygon: toMercator(polygon),
-          height: height,
-        };
-      }
-    );
-    return polygonsWithHeightTranslated;
-  },
+export const DrawnPolygonsState = atom<
+  {
+    polygon: TurfPolygon;
+    height: number;
+  }[]
+>({
+  key: "DrawnPolygonsState",
+  default: [],
 });
 
 export const GeoTiffState = atom<any>({

@@ -1,9 +1,19 @@
 import * as turf from "turf";
 import booleanContains from "@turf/boolean-contains";
 import { Feature, GeoJsonProperties, Polygon, Position } from "geojson";
+import { toMercator } from "@turf/projection";
 import { Cycle, Graph, PathQueue, PolygonWithHeight } from "./types";
 
 const INTERSECTION_AREA_THRESHOLD = 0.0001;
+
+type Georaster = {
+  pixelHeight: number;
+  pixelWidth: number;
+  noDataValue: number;
+  xmin: number;
+  ymax: number;
+  values: any;
+};
 
 function _stringToPoint(string: string): [number, number] {
   const [lat, lng] = string.split(",");
@@ -278,7 +288,7 @@ function _getPolygonBounds(polygon: Feature<Polygon, GeoJsonProperties>) {
 
 function _getPolygonHeight(
   polygon: Feature<Polygon, GeoJsonProperties>,
-  georaster: any
+  georaster: Georaster
 ): number {
   let totalHeight = 0;
   let totalPixels = 0;
@@ -306,7 +316,7 @@ function _getPolygonHeight(
 
 export function fetchHeightFromRaster(
   polygons: Feature<Polygon, GeoJsonProperties>[],
-  georaster: any
+  georaster: Georaster
 ): PolygonWithHeight[] {
   const polygonsWithHeight = polygons.map((polygon) => {
     const polygonHeight = _getPolygonHeight(polygon, georaster);
@@ -317,3 +327,24 @@ export function fetchHeightFromRaster(
   });
   return polygonsWithHeight;
 }
+
+self.onmessage = (event: MessageEvent) => {
+  const messageData = event.data;
+  const { georaster, drawnLines } = messageData;
+  if (!georaster || !drawnLines) return;
+  const adjacencyGraph = new Graph();
+  adjacencyGraph.createGraphFromListOfLines(drawnLines);
+  const cycles = findCycles(adjacencyGraph);
+  const uniqueCycles = filterDuplicateCycles(cycles);
+  const distinctPolygons = removeOverlappingCycles(uniqueCycles);
+  const polygonsWithHeight = fetchHeightFromRaster(distinctPolygons, georaster);
+  const polygonsWithHeightTranslated = polygonsWithHeight.map(
+    ({ polygon, height }) => {
+      return {
+        polygon: toMercator(polygon),
+        height: height,
+      };
+    }
+  );
+  postMessage({ polygons: polygonsWithHeightTranslated });
+};

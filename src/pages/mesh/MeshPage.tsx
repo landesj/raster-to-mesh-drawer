@@ -8,7 +8,7 @@ import { DrawnBuildings } from "./components/DrawnBuildings";
 import { Terrain } from "./components/Terrain";
 import { useRecoilValue } from "recoil";
 import {
-  DrawPolygonsSelector,
+  DrawnPolygonsState,
   GroundPointState,
   ProjectSetupState,
 } from "../raster/state";
@@ -43,7 +43,7 @@ export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
 
 function MeshPage() {
   const groundHeight = useRecoilValue(GroundPointState);
-  const drawnBuildings = useRecoilValue(DrawPolygonsSelector);
+  const drawnBuildings = useRecoilValue(DrawnPolygonsState);
   const isProjectSetup = useRecoilValue(ProjectSetupState);
   const ref = useRef<HTMLCanvasElement>(null);
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
 import * as turf from "turf";
-import { DrawPolygonsSelector, GroundPointState } from "../../raster/state";
+import { DrawnPolygonsState, GroundPointState } from "../../raster/state";
 import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, orbitControls, three } from "../MeshPage";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
@@ -16,7 +16,7 @@ const DRAWN_BUILDING_GEOMETRY_NAME = "DRAWN_BUILDING";
 export function DrawnBuildings() {
   const groundHeight = useRecoilValue(GroundPointState);
   const meshMapBounds = useRecoilValue(MeshBoundsState);
-  const drawnPolygons = useRecoilValue(DrawPolygonsSelector);
+  const drawnPolygons = useRecoilValue(DrawnPolygonsState);
   const [isCameraSet, setCamera] = useState(false);
 
   const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
