@@ -19,6 +19,7 @@ import {
   LeafletBoundsState,
   OsmBuildingsState,
   ProjectSetupState,
+  RasterState,
 } from "./state";
 import { RasterNavbar } from "./Navbar";
 
@@ -29,11 +30,11 @@ const workerUrl = new URL("./drawingCanvas/cycleWorker.ts", import.meta.url)
 export function RasterPage() {
   const isGroundPointListening = useRecoilValue(GroundPointListeningState);
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  const [rasterState, setRasterState] = useState<ArrayBuffer | null>(null);
+  const rasterState = useRecoilValue(RasterState);
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
   const [mapBounds, setMapBounds] = useRecoilState(LeafletBoundsState);
   const [showRaster, setShowRaster] = useState<boolean>(true);
-  const [isProjectSetup, setProjectSetup] = useRecoilState(ProjectSetupState);
+  const isProjectSetup = useRecoilValue(ProjectSetupState);
   const drawnLines = useRecoilValue(DrawnLinesState);
   const georaster = useRecoilValue(GeoTiffState);
   const setDrawnPolygonsState = useSetRecoilState(DrawnPolygonsState);
@@ -66,21 +67,6 @@ export function RasterPage() {
       worker.terminate();
     };
   }, [drawnLines, georaster, setDrawnPolygonsState]);
-
-  const onInputChange = (files: FileList | null) => {
-    if (files !== null) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onerror = () => {
-        alert("Encountered an error when reading file.");
-      };
-      reader.readAsArrayBuffer(file);
-      reader.onloadend = () => {
-        setRasterState(reader.result as ArrayBuffer);
-        setProjectSetup(true);
-      };
-    }
-  };
 
   const changeIsDrawing = () => {
     setIsDrawing(!isDrawing);
@@ -131,15 +117,6 @@ export function RasterPage() {
         <SetGroundPoint />
         {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
       </MapContainer>
-      {!isProjectSetup && (
-        <>
-          <Input
-            id="tif_input"
-            onChange={(event) => onInputChange(event.target.files)}
-          />
-          <Label>Import GeoTiff File</Label>
-        </>
-      )}
     </Page>
   );
 }

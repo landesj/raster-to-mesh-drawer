@@ -1,9 +1,9 @@
 import { useRecoilValue } from "recoil";
-import { HasGeorasterState } from "../state";
 import { RasterPage } from "../raster/RasterPage";
 import MeshPage from "../mesh/MeshPage";
 import { Intro } from "../intro/Intro";
 import styled from "styled-components";
+import { ProjectSetupState } from "../raster/state";
 
 const AppPage = styled.div`
   display: flex;
@@ -12,9 +12,9 @@ const AppPage = styled.div`
 `;
 
 export function Main() {
-  const hasGeoraster = useRecoilValue(HasGeorasterState);
+  const isProjectSetup = useRecoilValue(ProjectSetupState);
 
-  return hasGeoraster ? (
+  return isProjectSetup ? (
     <AppPage>
       <RasterPage />
       <MeshPage />

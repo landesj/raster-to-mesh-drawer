@@ -10,8 +10,3 @@ export const MeshBoundsState = atom<MeshBounds | undefined>({
   key: "MeshBoundsState",
   default: undefined,
 });
-
-export const HasGeorasterState = atom<boolean>({
-  key: "HasGeorasterState",
-  default: false,
-});
