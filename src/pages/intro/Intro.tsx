@@ -17,7 +17,7 @@ export function Intro() {
   const setRasterState = useSetRecoilState(RasterState);
   const setProjectSetup = useSetRecoilState(ProjectSetupState);
 
-  const handleButtonClick = () => {
+  const handleChooseFileButtonClick = () => {
     fileInputRef.current?.click();
   };
 
@@ -37,11 +37,26 @@ export function Intro() {
     }
   };
 
+  const handleTrySampleButtonClick = async () => {
+    const response = await fetch("/sample.tif");
+    if (!response.ok) {
+      alert("Unable to get sample. Please import a custom file.");
+      return;
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    setRasterState(arrayBuffer);
+    setProjectSetup(true);
+  };
+
   return (
     <Page>
       <Button
-        onClick={handleButtonClick}
-        style={{ display: "inline-flex", alignItems: "center" }}
+        onClick={handleChooseFileButtonClick}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          cursor: "pointer",
+        }}
       >
         Choose file
       </Button>
@@ -53,7 +68,12 @@ export function Intro() {
         style={{ display: "none" }} // Hide the default file input
         aria-label="File input"
       />
-      <Button style={{ cursor: "pointer" }}>Try sample</Button>
+      <Button
+        onClick={handleTrySampleButtonClick}
+        style={{ cursor: "pointer" }}
+      >
+        Try sample
+      </Button>
     </Page>
   );
 }
