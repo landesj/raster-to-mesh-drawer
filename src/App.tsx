@@ -1,22 +1,15 @@
 import "./App.css";
-import { RasterPage } from "./pages/raster/RasterPage";
-import styled from "styled-components";
-import MeshPage from "./pages/mesh/MeshPage";
 import { RecoilRoot } from "recoil";
-
-const AppPage = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-`;
+import "@radix-ui/themes/styles.css";
+import { Theme } from "@radix-ui/themes";
+import { Main } from "./pages/main/Main";
 
 function App() {
   return (
     <RecoilRoot>
-      <AppPage>
-        <RasterPage />
-        <MeshPage />
-      </AppPage>
+      <Theme>
+        <Main />
+      </Theme>
     </RecoilRoot>
   );
 }

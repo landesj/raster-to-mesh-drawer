@@ -1,16 +1,10 @@
-import { atom, selector } from "recoil";
+import { atom } from "recoil";
 import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
-import {
-  fetchHeightFromRaster,
-  filterDuplicateCycles,
-  findCycles,
-  removeOverlappingCycles,
-} from "./drawingCanvas/cycleWorker";
-import { toMercator } from "@turf/projection";
 import { Coordinates, PolygonGeometry, RoadGeometry } from "./types";
-import { Graph, TurfPolygon } from "./drawingCanvas/types";
+import { TurfPolygon } from "./drawingCanvas/types";
 import { MapBounds } from "../../mapUtils";
+import { JSDocNullableType } from "typescript";
 
 export const OsmBuildingsState = atom<Coordinates[]>({
   key: "OsmBuildingsState",
@@ -70,4 +64,9 @@ export const DrawnPolygonsState = atom<
 export const GeoTiffState = atom<any>({
   key: "GeoTiffState",
   default: undefined,
+});
+
+export const RasterState = atom<ArrayBuffer | null>({
+  key: "RasterState",
+  default: null,
 });

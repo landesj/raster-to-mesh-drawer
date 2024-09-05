@@ -1,4 +1,4 @@
-import { Button } from "../style";
+import { Button } from "@radix-ui/themes";
 import { handleMeshExport, TurfPolygonWithHeight } from "./meshExport";
 
 export type Props = {
