@@ -9,12 +9,40 @@ import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { MeshBoundsState } from "../../state";
 import { TurfPolygon } from "../../raster/drawingCanvas/types";
+import { RoadGeometry } from "../../raster/types";
 
 const ROAD_MATERIAL = new THREE.LineBasicMaterial({
   color: "#191919",
 });
 
 const ROAD_GEOMETRY_NAME = "ROAD";
+
+const drawRoad = (
+  road: RoadGeometry,
+  referencePointLat: number,
+  referencePointLon: number
+) => {
+  const roadBuffered = turf.buffer(road, 100.0) as TurfPolygon;
+  const roadSimplified = turf.simplify(
+    roadBuffered,
+    0.01,
+    false
+  ) as TurfPolygon;
+  const vectors = roadSimplified.geometry.coordinates[0].map(
+    (point) =>
+      new THREE.Vector2(
+        point[1] - referencePointLon,
+        point[0] - referencePointLat
+      )
+  );
+  const shape = new THREE.Shape(vectors);
+  const extrudedGeometry = new THREE.ExtrudeBufferGeometry(shape, {
+    depth: 1.5,
+  });
+  const mesh = new THREE.Mesh(extrudedGeometry, ROAD_MATERIAL);
+  mesh.name = ROAD_GEOMETRY_NAME;
+  three.scene.add(mesh);
+};
 
 export function Roads() {
   const [roadsOrdered, setRoadsOrdered] = useState(false);
@@ -39,26 +67,7 @@ export function Roads() {
       getLatLonFromString(referencePoint);
 
     osmRoads.forEach((road) => {
-      const roadBuffered = turf.buffer(road, 3.0) as TurfPolygon;
-      const roadSimplified = turf.simplify(
-        roadBuffered,
-        0.01,
-        false
-      ) as TurfPolygon;
-      const vectors = roadSimplified.geometry.coordinates[0].map(
-        (point) =>
-          new THREE.Vector2(
-            point[1] - referencePointLon,
-            point[0] - referencePointLat
-          )
-      );
-      const shape = new THREE.Shape(vectors);
-      const extrudedGeometry = new THREE.ExtrudeBufferGeometry(shape, {
-        depth: 1.0,
-      });
-      const mesh = new THREE.Mesh(extrudedGeometry, ROAD_MATERIAL);
-      mesh.name = ROAD_GEOMETRY_NAME;
-      three.scene.add(mesh);
+      drawRoad(road, referencePointLat, referencePointLon);
     });
     three.renderer.render(three.scene, three.camera);
     return function cleanupScene() {
