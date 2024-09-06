@@ -17,6 +17,7 @@ export function DrawnBuildings() {
   const groundHeight = useRecoilValue(GroundPointState);
   const meshMapBounds = useRecoilValue(MeshBoundsState);
   const drawnPolygons = useRecoilValue(DrawnPolygonsState);
+  console.log(drawnPolygons);
   const [isCameraSet, setCamera] = useState(false);
 
   const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);

@@ -3,16 +3,17 @@ import * as THREE from "three";
 import { CANVAS_HEIGHT } from "../raster/RasterPage";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Page } from "../style";
-import { MeshNavbar } from "./Navbar";
 import { DrawnBuildings } from "./components/DrawnBuildings";
 import { Terrain } from "./components/Terrain";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
-  DrawnPolygonsState,
   GroundPointState,
   ProjectSetupState,
+  ShowOsmState,
 } from "../raster/state";
-import { BottomPanel } from "./BottomPanel";
+import { Vegetation } from "./components/Vegetation";
+import { Roads } from "./components/Roads";
+import { Eye, EyeOff } from "lucide-react";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
@@ -39,12 +40,39 @@ export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
       }
     }
   }
+  three.renderer.render(three.scene, three.camera);
+}
+
+function BottomBar() {
+  const isProjectSetup = useRecoilValue(ProjectSetupState);
+  const groundHeight = useRecoilValue(GroundPointState);
+  const [showOsm, setShowOsm] = useRecoilState(ShowOsmState);
+  const groundHeightText = `Ground elevation is: ${groundHeight.toFixed(2)}`;
+  if (!isProjectSetup) return null;
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "3px",
+      }}
+    >
+      <p>{groundHeightText}</p>
+      {showOsm ? (
+        <div onClick={() => setShowOsm(!showOsm)} style={{ cursor: "pointer" }}>
+          <EyeOff />
+        </div>
+      ) : (
+        <div onClick={() => setShowOsm(!showOsm)} style={{ cursor: "pointer" }}>
+          <Eye />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function MeshPage() {
-  const groundHeight = useRecoilValue(GroundPointState);
-  const drawnBuildings = useRecoilValue(DrawnPolygonsState);
-  const isProjectSetup = useRecoilValue(ProjectSetupState);
   const ref = useRef<HTMLCanvasElement>(null);
 
   const pointLight = useMemo(() => {
@@ -115,16 +143,12 @@ function MeshPage() {
 
   return (
     <Page>
-      {isProjectSetup && <MeshNavbar />}
       <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
       <DrawnBuildings />
       <Terrain />
-      {isProjectSetup && (
-        <BottomPanel
-          groundHeight={groundHeight}
-          drawnBuildings={drawnBuildings}
-        />
-      )}
+      <Vegetation />
+      <Roads />
+      <BottomBar />
     </Page>
   );
 }

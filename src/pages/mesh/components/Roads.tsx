@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
 import * as turf from "turf";
-import { OsmRoadsState } from "../../raster/state";
+import { OsmRoadsState, ShowOsmState } from "../../raster/state";
 import { fetchOsmRoads } from "../../../fetch/fetchOsm";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
@@ -45,6 +45,7 @@ const drawRoad = (
 
 export function Roads() {
   const meshMapBounds = useRecoilValue(MeshBoundsState);
+  const showOsm = useRecoilValue(ShowOsmState);
   const [osmRoads, setOsmRoads] = useRecoilState(OsmRoadsState);
 
   useEffect(() => {
@@ -55,7 +56,8 @@ export function Roads() {
   const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
 
   useEffect(() => {
-    if (osmRoads.length === 0 || referencePoint === undefined) return;
+    if (osmRoads.length === 0 || referencePoint === undefined || !showOsm)
+      return;
 
     const { referencePointLat, referencePointLon } =
       getLatLonFromString(referencePoint);
@@ -67,6 +69,6 @@ export function Roads() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene, ROAD_GEOMETRY_NAME);
     };
-  }, [osmRoads, referencePoint]);
+  }, [osmRoads, referencePoint, showOsm]);
   return null;
 }

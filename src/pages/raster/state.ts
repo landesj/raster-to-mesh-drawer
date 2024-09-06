@@ -63,3 +63,8 @@ export const RasterState = atom<ArrayBuffer | null>({
   key: "RasterState",
   default: null,
 });
+
+export const ShowOsmState = atom<boolean>({
+  key: "ShowOsmState",
+  default: true,
+});

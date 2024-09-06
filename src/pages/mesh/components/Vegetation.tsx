@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import { OsmVegetationState } from "../../raster/state";
+import { OsmVegetationState, ShowOsmState } from "../../raster/state";
 import { fetchOsmVegetation } from "../../../fetch/fetchOsm";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
@@ -39,6 +39,7 @@ const drawTreeRoot = (x: number, y: number, z: number) => {
   const geometry = new THREE.CylinderGeometry(1.5, 1.5, 5, 32);
   const material = new THREE.MeshBasicMaterial({ color: 0x7c3f00 });
   const cylinder = new THREE.Mesh(geometry, material);
+  cylinder.name = VEGETATION_GEOMETRY_NAME;
   cylinder.position.set(x, y, z);
   cylinder.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X axis
   three.scene.add(cylinder);
@@ -48,6 +49,7 @@ const drawTreeTop = (x: number, y: number, z: number) => {
   const geometry = new THREE.CylinderGeometry(0, 5, 15, 32);
   const material = new THREE.MeshBasicMaterial({ color: 0x234f1e });
   const cylinder = new THREE.Mesh(geometry, material);
+  cylinder.name = VEGETATION_GEOMETRY_NAME;
   cylinder.position.set(x, y, z);
   cylinder.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X axis
   three.scene.add(cylinder);
@@ -76,6 +78,7 @@ const drawTrees = (
 
 export function Vegetation() {
   const meshMapBounds = useRecoilValue(MeshBoundsState);
+  const showOsm = useRecoilValue(ShowOsmState);
   const [osmVegetation, setOsmVegetation] = useRecoilState(OsmVegetationState);
 
   useEffect(() => {
@@ -85,7 +88,8 @@ export function Vegetation() {
 
   const referencePoint = getMercatorMapReferencePoint(meshMapBounds?.bounds);
   useEffect(() => {
-    if (osmVegetation.length === 0 || referencePoint === undefined) return;
+    if (osmVegetation.length === 0 || referencePoint === undefined || !showOsm)
+      return;
 
     const { referencePointLat, referencePointLon } =
       getLatLonFromString(referencePoint);
@@ -98,6 +102,6 @@ export function Vegetation() {
     return function cleanupScene() {
       cleanupMeshesFromScene(three.scene, VEGETATION_GEOMETRY_NAME);
     };
-  }, [osmVegetation, referencePoint]);
+  }, [osmVegetation, referencePoint, showOsm]);
   return null;
 }
