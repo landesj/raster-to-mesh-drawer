@@ -305,8 +305,8 @@ function _getPolygonHeight(
         );
         const pixelValue = georaster.values[0][yPixelIndex][xPixelIndex];
         if (
-          pixelValue !== georaster.noDataValue ||
-          typeof pixelValue !== "number"
+          pixelValue !== georaster.noDataValue &&
+          typeof pixelValue === "number"
         ) {
           totalHeight += pixelValue;
           totalPixels += 1;

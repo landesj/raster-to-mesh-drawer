@@ -3,18 +3,14 @@ import { Button, Navbar } from "../style";
 import { GroundPointListeningState, GroundPointState } from "./state";
 
 type Props = {
-  changeIsDrawing: () => void;
   changeShowRasterState: () => void;
   rasterState: ArrayBuffer | null;
-  drawingButtonText: string;
   showRasterText: string;
 };
 
 export function RasterNavbar({
-  changeIsDrawing,
   changeShowRasterState,
   rasterState,
-  drawingButtonText,
   showRasterText,
 }: Props) {
   const [groundPointListening, setGroundPointListening] = useRecoilState(
@@ -35,7 +31,6 @@ export function RasterNavbar({
 
   return (
     <Navbar>
-      <Button onClick={changeIsDrawing}>{drawingButtonText}</Button>
       {rasterState !== null && (
         <Button onClick={onClickGroundPointListening}>{groundPointText}</Button>
       )}

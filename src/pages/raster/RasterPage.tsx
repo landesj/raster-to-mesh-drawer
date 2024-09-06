@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { DrawingCanvas } from "./drawingCanvas/DrawingCanvas";
@@ -28,7 +28,6 @@ const workerUrl = new URL("./drawingCanvas/cycleWorker.ts", import.meta.url)
 
 export function RasterPage() {
   const isGroundPointListening = useRecoilValue(GroundPointListeningState);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const rasterState = useRecoilValue(RasterState);
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
   const mapBounds = useRecoilValue(MeshBoundsState);
@@ -67,10 +66,6 @@ export function RasterPage() {
     };
   }, [drawnLines, georaster, setDrawnPolygonsState]);
 
-  const changeIsDrawing = () => {
-    setIsDrawing(!isDrawing);
-  };
-
   useEffect(() => {
     if (mapBounds === undefined) return;
     fetchOsmBuildings(mapBounds.bounds, setOsmBuildings);
@@ -79,18 +74,14 @@ export function RasterPage() {
   const changeShowRasterState = () => {
     setShowRaster(!showRaster);
   };
-
-  const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
   const showRasterText = showRaster ? "Hide Raster" : "Show Raster";
 
   return (
     <Page>
       {isProjectSetup && (
         <RasterNavbar
-          changeIsDrawing={changeIsDrawing}
           changeShowRasterState={changeShowRasterState}
           rasterState={rasterState}
-          drawingButtonText={drawingButtonText}
           showRasterText={showRasterText}
         />
       )}
@@ -107,7 +98,7 @@ export function RasterPage() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={25}
         />
-        {isDrawing && !isGroundPointListening && <DrawingCanvas />}
+        {!isGroundPointListening && <DrawingCanvas />}
         <RasterImport rasterArrayBuffer={rasterState} showRaster={showRaster} />
         <SetGroundPoint />
         {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
