@@ -25,21 +25,9 @@ type ImportProps = {
   showRaster: boolean;
 };
 
-type SetBoundsProps = {
-  setBounds: SetterOrUpdater<MapBounds | undefined>;
-};
-
 type OsmProps = {
   buildings: Coordinates[];
 };
-
-export function SetMapBounds({ setBounds }: SetBoundsProps) {
-  const setBoundsDebounced = debounce(setBounds, 100);
-  const leafletMap = useMap();
-  const leafletBounds = getMapBounds(leafletMap.getBounds());
-  useMapEvent("move", () => setBoundsDebounced(leafletBounds));
-  return <></>;
-}
 
 export function RasterImport({ rasterArrayBuffer, showRaster }: ImportProps) {
   const leafletMap = useMap();

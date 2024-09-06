@@ -7,21 +7,20 @@ import {
   OsmBuildings,
   RasterImport,
   SetGroundPoint,
-  SetMapBounds,
 } from "./LeafletComponents";
-import { Input, Label, Page } from "../style";
+import { Page } from "../style";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import {
   DrawnLinesState,
   DrawnPolygonsState,
   GeoTiffState,
   GroundPointListeningState,
-  LeafletBoundsState,
   OsmBuildingsState,
   ProjectSetupState,
   RasterState,
 } from "./state";
 import { RasterNavbar } from "./Navbar";
+import { MeshBoundsState } from "../state";
 
 export const CANVAS_HEIGHT = "90vh";
 const workerUrl = new URL("./drawingCanvas/cycleWorker.ts", import.meta.url)
@@ -32,7 +31,7 @@ export function RasterPage() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const rasterState = useRecoilValue(RasterState);
   const [osmBuildings, setOsmBuildings] = useRecoilState(OsmBuildingsState);
-  const [mapBounds, setMapBounds] = useRecoilState(LeafletBoundsState);
+  const mapBounds = useRecoilValue(MeshBoundsState);
   const [showRaster, setShowRaster] = useState<boolean>(true);
   const isProjectSetup = useRecoilValue(ProjectSetupState);
   const drawnLines = useRecoilValue(DrawnLinesState);
@@ -72,13 +71,10 @@ export function RasterPage() {
     setIsDrawing(!isDrawing);
   };
 
-  const orderOsmBuildings = useCallback(() => {
-    if (mapBounds === undefined) {
-      alert("Map bounds not set, cannot order OSM");
-      return;
-    }
-    fetchOsmBuildings(mapBounds, setOsmBuildings);
-  }, [mapBounds, setOsmBuildings]);
+  useEffect(() => {
+    if (mapBounds === undefined) return;
+    fetchOsmBuildings(mapBounds.bounds, setOsmBuildings);
+  }, [mapBounds]);
 
   const changeShowRasterState = () => {
     setShowRaster(!showRaster);
@@ -86,12 +82,12 @@ export function RasterPage() {
 
   const drawingButtonText = isDrawing ? "Stop Drawing" : "Start Drawing";
   const showRasterText = showRaster ? "Hide Raster" : "Show Raster";
+
   return (
     <Page>
       {isProjectSetup && (
         <RasterNavbar
           changeIsDrawing={changeIsDrawing}
-          orderOsmBuildings={orderOsmBuildings}
           changeShowRasterState={changeShowRasterState}
           rasterState={rasterState}
           drawingButtonText={drawingButtonText}
@@ -99,8 +95,8 @@ export function RasterPage() {
         />
       )}
       <MapContainer
-        center={[51.505, -0.09]}
-        zoom={15}
+        center={[0, 0]}
+        zoom={20}
         style={{ height: CANVAS_HEIGHT, width: "100%", cursor: "pointer" }}
         minZoom={1}
         maxZoom={25}
@@ -113,7 +109,6 @@ export function RasterPage() {
         />
         {isDrawing && !isGroundPointListening && <DrawingCanvas />}
         <RasterImport rasterArrayBuffer={rasterState} showRaster={showRaster} />
-        <SetMapBounds setBounds={setMapBounds} />
         <SetGroundPoint />
         {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
       </MapContainer>

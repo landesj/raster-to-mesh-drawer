@@ -3,8 +3,6 @@ import { LineType } from "../../assets/Line";
 import { PointType } from "../../assets/Point";
 import { Coordinates, PolygonGeometry, RoadGeometry } from "./types";
 import { TurfPolygon } from "./drawingCanvas/types";
-import { MapBounds } from "../../mapUtils";
-import { JSDocNullableType } from "typescript";
 
 export const OsmBuildingsState = atom<Coordinates[]>({
   key: "OsmBuildingsState",
@@ -19,11 +17,6 @@ export const OsmVegetationState = atom<PolygonGeometry[]>({
 export const OsmRoadsState = atom<RoadGeometry[]>({
   key: "OsmRoadsState",
   default: [],
-});
-
-export const LeafletBoundsState = atom<MapBounds | undefined>({
-  key: "LeafletBoundsState",
-  default: undefined,
 });
 
 export const DrawnPointsState = atom<PointType[]>({
