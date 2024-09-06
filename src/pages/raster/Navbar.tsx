@@ -4,7 +4,6 @@ import { GroundPointListeningState, GroundPointState } from "./state";
 
 type Props = {
   changeIsDrawing: () => void;
-  orderOsmBuildings: () => void;
   changeShowRasterState: () => void;
   rasterState: ArrayBuffer | null;
   drawingButtonText: string;
@@ -13,7 +12,6 @@ type Props = {
 
 export function RasterNavbar({
   changeIsDrawing,
-  orderOsmBuildings,
   changeShowRasterState,
   rasterState,
   drawingButtonText,
@@ -38,7 +36,6 @@ export function RasterNavbar({
   return (
     <Navbar>
       <Button onClick={changeIsDrawing}>{drawingButtonText}</Button>
-      <Button onClick={orderOsmBuildings}>Order OSM Buildings</Button>
       {rasterState !== null && (
         <Button onClick={onClickGroundPointListening}>{groundPointText}</Button>
       )}
