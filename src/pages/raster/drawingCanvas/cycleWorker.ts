@@ -219,7 +219,7 @@ export function filterDuplicateCycles(cycles: Cycle[]): Cycle[] {
 export function removeOverlappingCycles(
   cycles: Cycle[]
 ): Feature<Polygon, GeoJsonProperties>[] {
-  const polygons = cycles.map((cycle) => turf.polygon([[...cycle, cycle[0]]]));
+  const polygons = cycles.map((cycle) => turf.polygon([[...cycle]]));
   let removableIndices = [];
   for (let startIndex = 0; startIndex < polygons.length; startIndex += 1) {
     const polygonStart = polygons[startIndex];
@@ -293,6 +293,7 @@ function _getPolygonHeight(
   let totalHeight = 0;
   let totalPixels = 0;
   const [[xMin, yMin], [xMax, yMax]] = _getPolygonBounds(polygon);
+  // TODO: What's going on width pixelWidth?
   for (let x = xMin; x <= xMax; x += georaster.pixelWidth) {
     for (let y = yMin; y <= yMax; y += georaster.pixelHeight) {
       const newPoint = turf.point([y, x]);

@@ -68,3 +68,8 @@ export const ShowOsmState = atom<boolean>({
   key: "ShowOsmState",
   default: true,
 });
+
+export const ShowOsmBuildingsState = atom<boolean>({
+  key: "ShowOsmBuildingsState",
+  default: true,
+});

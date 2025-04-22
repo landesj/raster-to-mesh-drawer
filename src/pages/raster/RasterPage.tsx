@@ -18,6 +18,7 @@ import {
   OsmBuildingsState,
   ProjectSetupState,
   RasterState,
+  ShowOsmBuildingsState,
 } from "./state";
 import { RasterNavbar } from "./Navbar";
 import { MeshBoundsState } from "../state";
@@ -35,6 +36,7 @@ export function RasterPage() {
   const isProjectSetup = useRecoilValue(ProjectSetupState);
   const drawnLines = useRecoilValue(DrawnLinesState);
   const georaster = useRecoilValue(GeoTiffState);
+  const showOsmBuildings = useRecoilValue(ShowOsmBuildingsState);
   const setDrawnPolygonsState = useSetRecoilState(DrawnPolygonsState);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function RasterPage() {
         georaster: {
           values: georaster.values,
           pixelHeight: georaster.pixelHeight,
-          pixelWidth: georaster.pixelHeight,
+          pixelWidth: georaster.pixelWidth,
           noDataValue: georaster.noDataValue,
           xmin: georaster.xmin,
           ymax: georaster.ymax,
@@ -101,7 +103,9 @@ export function RasterPage() {
         {!isGroundPointListening && <DrawingCanvas />}
         <RasterImport rasterArrayBuffer={rasterState} showRaster={showRaster} />
         <SetGroundPoint />
-        {osmBuildings.length !== 0 && <OsmBuildings buildings={osmBuildings} />}
+        {osmBuildings.length !== 0 && showOsmBuildings && (
+          <OsmBuildings buildings={osmBuildings} />
+        )}
       </MapContainer>
     </Page>
   );
