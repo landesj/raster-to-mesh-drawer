@@ -143,7 +143,6 @@ export async function fetchOsmRoads(
   const roadLinesMercator = nonEmptyRoadElements.map((coordinates) =>
     toMercator(turf.lineString(coordinates))
   );
-  console.log(roadLinesMercator);
   setOsmRoads(roadLinesMercator);
 }
 

@@ -9,6 +9,7 @@ import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { MeshBoundsState } from "../../state";
 import { TurfPolygon } from "../../raster/drawingCanvas/types";
 import { RoadGeometry } from "../../raster/types";
+import { toWgs84, toMercator } from "@turf/projection";
 
 const ROAD_MATERIAL = new THREE.LineBasicMaterial({
   color: "#282828",
@@ -21,12 +22,15 @@ const drawRoad = (
   referencePointLat: number,
   referencePointLon: number
 ) => {
-  const roadBuffered = turf.buffer(road, 70.0) as TurfPolygon;
+  const roadBuffered = toMercator(
+    turf.buffer(toWgs84(road), 3.0, {
+      units: "meters",
+    })
+  ) as TurfPolygon;
   const roadSimplified = turf.simplify(roadBuffered, {
     tolerance: 0.01,
     highQuality: false,
   }) as TurfPolygon;
-  console.log(roadSimplified);
   const vectors = roadSimplified.geometry.coordinates[0]
     .slice(0, -1)
     .map(
@@ -63,7 +67,6 @@ export function Roads() {
 
     const { referencePointLat, referencePointLon } =
       getLatLonFromString(referencePoint);
-
     osmRoads.forEach((road) => {
       drawRoad(road, referencePointLat, referencePointLon);
     });

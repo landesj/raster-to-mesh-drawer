@@ -17,6 +17,7 @@ import { Roads } from "./components/Roads";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@radix-ui/themes";
 import { handleMeshExport } from "./meshExport";
+import { MapBounds } from "../../mapUtils";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
