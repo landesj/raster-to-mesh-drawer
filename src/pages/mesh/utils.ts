@@ -1,7 +1,7 @@
 import { toMercator } from "@turf/projection";
 import bbox from "@turf/bbox";
 import { MapBounds } from "../../mapUtils";
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 
 export function getMercatorMapReferencePoint(
   bounds: MapBounds | undefined

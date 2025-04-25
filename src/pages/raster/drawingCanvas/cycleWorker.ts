@@ -1,4 +1,4 @@
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 import booleanContains from "@turf/boolean-contains";
 import { Feature, GeoJsonProperties, Polygon, Position } from "geojson";
 import { toMercator } from "@turf/projection";
@@ -233,8 +233,7 @@ export function removeOverlappingCycles(
         continue;
       }
       const polygonIntersection = turf.intersect(
-        polygons[startIndex],
-        polygons[endIndex]
+        turf.featureCollection([polygons[startIndex], polygons[endIndex]])
       );
       if (
         polygonIntersection &&

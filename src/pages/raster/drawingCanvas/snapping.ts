@@ -1,11 +1,11 @@
 import nearestPointOnLine from "@turf/nearest-point-on-line";
 import { Feature, GeoJsonProperties, Point } from "geojson";
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 import { SnapEvent } from "./types";
 import { LineType } from "../../../assets/Line";
 import { PointType } from "../../../assets/Point";
 
-const DISTANCE_THRESHOLD = 0.00001;
+const DISTANCE_THRESHOLD = 0.001;
 
 function _withinDistanceThreshold(
   pointA: Feature<Point, GeoJsonProperties>,

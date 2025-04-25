@@ -1,5 +1,5 @@
 import { LatLngBounds } from "leaflet";
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 
 export type MapBounds = {
   latMin: number;

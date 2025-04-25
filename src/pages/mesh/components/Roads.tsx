@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import * as THREE from "three";
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 import { OsmRoadsState, ShowOsmState } from "../../raster/state";
 import { fetchOsmRoads } from "../../../fetch/fetchOsm";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
@@ -22,18 +22,20 @@ const drawRoad = (
   referencePointLon: number
 ) => {
   const roadBuffered = turf.buffer(road, 70.0) as TurfPolygon;
-  const roadSimplified = turf.simplify(
-    roadBuffered,
-    0.01,
-    false
-  ) as TurfPolygon;
-  const vectors = roadSimplified.geometry.coordinates[0].map(
-    (point) =>
-      new THREE.Vector2(
-        point[1] - referencePointLon,
-        point[0] - referencePointLat
-      )
-  );
+  const roadSimplified = turf.simplify(roadBuffered, {
+    tolerance: 0.01,
+    highQuality: false,
+  }) as TurfPolygon;
+  console.log(roadSimplified);
+  const vectors = roadSimplified.geometry.coordinates[0]
+    .slice(0, -1)
+    .map(
+      (point) =>
+        new THREE.Vector2(
+          point[1] - referencePointLon,
+          point[0] - referencePointLat
+        )
+    );
   const shape = new THREE.Shape(vectors);
   const extrudedGeometry = new THREE.ExtrudeBufferGeometry(shape, {
     depth: 1.5,

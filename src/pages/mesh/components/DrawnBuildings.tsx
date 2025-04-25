@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 import { DrawnPolygonsState, GroundPointState } from "../../raster/state";
 import { MeshBoundsState } from "../../state";
 import { cleanupMeshesFromScene, orbitControls, three } from "../MeshPage";

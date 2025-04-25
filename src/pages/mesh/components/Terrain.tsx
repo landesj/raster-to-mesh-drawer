@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRecoilValue } from "recoil";
 import * as THREE from "three";
-import * as turf from "turf";
+import * as turf from "@turf/turf";
 import { getLatLonFromString, getMercatorMapReferencePoint } from "../utils";
 import { cleanupMeshesFromScene, three } from "../MeshPage";
 import { MeshBoundsState } from "../../state";
