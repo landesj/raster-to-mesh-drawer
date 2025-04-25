@@ -4,7 +4,6 @@ import MeshPage from "../mesh/MeshPage";
 import { Intro } from "../intro/Intro";
 import styled from "styled-components";
 import { ProjectSetupState } from "../raster/state";
-import { BottomPanel } from "../mesh/BottomPanel";
 
 const AppPage = styled.div`
   display: flex;
@@ -21,7 +20,6 @@ export function Main() {
         <RasterPage />
         <MeshPage />
       </AppPage>
-      <BottomPanel />
     </div>
   ) : (
     <Intro />

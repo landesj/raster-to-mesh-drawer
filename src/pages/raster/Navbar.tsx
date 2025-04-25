@@ -1,5 +1,6 @@
 import { useRecoilState, useRecoilValue } from "recoil";
-import { Button, Navbar } from "../style";
+import { Button } from "@radix-ui/themes";
+import { Navbar } from "../style";
 import {
   GroundPointListeningState,
   GroundPointState,
@@ -47,12 +48,19 @@ export function RasterNavbar({
   return (
     <Navbar>
       {rasterState !== null && (
-        <Button onClick={onClickGroundPointListening}>{groundPointText}</Button>
+        <Button
+          style={{ cursor: "pointer" }}
+          onClick={onClickGroundPointListening}
+        >
+          {groundPointText}
+        </Button>
       )}
       {rasterState !== null && (
-        <Button onClick={changeShowRasterState}>{showRasterText}</Button>
+        <Button style={{ cursor: "pointer" }} onClick={changeShowRasterState}>
+          {showRasterText}
+        </Button>
       )}
-      <Button onClick={onClickShowOsmBuildings}>
+      <Button style={{ cursor: "pointer" }} onClick={onClickShowOsmBuildings}>
         {groundOsmBuildingsText}
       </Button>
     </Navbar>

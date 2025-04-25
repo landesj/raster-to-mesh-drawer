@@ -7,6 +7,7 @@ import { DrawnBuildings } from "./components/DrawnBuildings";
 import { Terrain } from "./components/Terrain";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
+  DrawnPolygonsState,
   GroundPointState,
   ProjectSetupState,
   ShowOsmState,
@@ -14,6 +15,8 @@ import {
 import { Vegetation } from "./components/Vegetation";
 import { Roads } from "./components/Roads";
 import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@radix-ui/themes";
+import { handleMeshExport } from "./meshExport";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
@@ -46,8 +49,20 @@ export function cleanupMeshesFromScene(scene: THREE.Scene, name: string) {
 function BottomBar() {
   const isProjectSetup = useRecoilValue(ProjectSetupState);
   const groundHeight = useRecoilValue(GroundPointState);
-  const [showOsm, setShowOsm] = useRecoilState(ShowOsmState);
   const groundHeightText = `Ground elevation is: ${groundHeight.toFixed(2)}`;
+  if (!isProjectSetup) return null;
+  return (
+    <div>
+      <p>{groundHeightText}</p>
+    </div>
+  );
+}
+
+function TopBar() {
+  const isProjectSetup = useRecoilValue(ProjectSetupState);
+  const [showOsm, setShowOsm] = useRecoilState(ShowOsmState);
+  const drawnBuildings = useRecoilValue(DrawnPolygonsState);
+  const groundHeight = useRecoilValue(GroundPointState);
   if (!isProjectSetup) return null;
   return (
     <div
@@ -56,9 +71,22 @@ function BottomBar() {
         alignItems: "center",
         justifyContent: "space-between",
         gap: "3px",
+        paddingBottom: "5px",
+        height: "35px",
       }}
     >
-      <p>{groundHeightText}</p>
+      <div>
+        {drawnBuildings.length > 0 ? (
+          <Button
+            style={{ cursor: "pointer" }}
+            onClick={() => handleMeshExport(drawnBuildings, groundHeight)}
+          >
+            Export Mesh
+          </Button>
+        ) : (
+          ""
+        )}
+      </div>
       {showOsm ? (
         <div onClick={() => setShowOsm(!showOsm)} style={{ cursor: "pointer" }}>
           <EyeOff />
@@ -143,6 +171,7 @@ function MeshPage() {
 
   return (
     <Page>
+      <TopBar />
       <canvas ref={ref} style={{ width: "100%", height: CANVAS_HEIGHT }} />
       <DrawnBuildings />
       <Terrain />

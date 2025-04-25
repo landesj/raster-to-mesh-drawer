@@ -9,7 +9,9 @@ export const Page = styled.div`
 
 export const Navbar = styled.div`
   padding-bottom: 5px;
-  height: 25px;
+  height: 35px;
+  display: flex;
+  gap: 15px;
 `;
 
 export const Button = styled.button`
