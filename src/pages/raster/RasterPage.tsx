@@ -22,10 +22,29 @@ import {
 } from "./state";
 import { RasterNavbar } from "./Navbar";
 import { MeshBoundsState } from "../state";
+import { LineType } from "../../assets/Line";
 
 export const CANVAS_HEIGHT = "90vh";
 const workerUrl = new URL("./drawingCanvas/cycleWorker.ts", import.meta.url)
   .href;
+const worker = new Worker(workerUrl, { type: "module" });
+
+type PolygonIdentificationRequest = {
+  drawnLines: LineType[];
+  georaster: {
+    values: any;
+    pixelHeight: number;
+    pixelWidth: number;
+    noDataValue: number;
+    xmin: number;
+    ymax: number;
+  };
+};
+
+type Request = {
+  ongoingRequest: boolean;
+  nextRequest?: PolygonIdentificationRequest;
+};
 
 export function RasterPage() {
   const isGroundPointListening = useRecoilValue(GroundPointListeningState);
@@ -38,35 +57,41 @@ export function RasterPage() {
   const georaster = useRecoilValue(GeoTiffState);
   const showOsmBuildings = useRecoilValue(ShowOsmBuildingsState);
   const setDrawnPolygonsState = useSetRecoilState(DrawnPolygonsState);
+  const [request, setRequest] = useState<Request>({ ongoingRequest: false });
 
   useEffect(() => {
-    const worker = new Worker(workerUrl, { type: "module" });
-
-    // Define the function to handle messages from the worker
     worker.onmessage = (event) => {
       setDrawnPolygonsState(event.data.polygons);
     };
+    setRequest((prev) => {
+      return { ...prev, ongoingRequest: false };
+    });
+    return () => worker.terminate();
+  }, []);
 
+  useEffect(() => {
     // Send a message to the worker
-    if (georaster !== undefined) {
-      worker.postMessage({
-        drawnLines,
-        georaster: {
-          values: georaster.values,
-          pixelHeight: georaster.pixelHeight,
-          pixelWidth: georaster.pixelWidth,
-          noDataValue: georaster.noDataValue,
-          xmin: georaster.xmin,
-          ymax: georaster.ymax,
-        },
-      });
-    }
-
-    // Clean up the worker when the component unmounts
-    return () => {
-      worker.terminate();
+    if (!georaster) return;
+    const request = {
+      drawnLines,
+      georaster: {
+        values: georaster.values,
+        pixelHeight: georaster.pixelHeight,
+        pixelWidth: georaster.pixelWidth,
+        noDataValue: georaster.noDataValue,
+        xmin: georaster.xmin,
+        ymax: georaster.ymax,
+      },
     };
-  }, [drawnLines, georaster, setDrawnPolygonsState]);
+    setRequest((prev) => {
+      return { ...prev, nextRequest: request };
+    });
+  }, [drawnLines, georaster]);
+
+  useEffect(() => {
+    if (!request.ongoingRequest && request.nextRequest)
+      worker.postMessage(request.nextRequest);
+  }, [request]);
 
   useEffect(() => {
     if (mapBounds === undefined) return;
