@@ -131,7 +131,7 @@ function MeshPage() {
       0.1,
       10000
     );
-    camera.position.z = 300;
+    camera.position.z = 750;
 
     // Create renderer
     const renderer = new THREE.WebGLRenderer({
