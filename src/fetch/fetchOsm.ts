@@ -126,9 +126,6 @@ export async function fetchOsmRoads(
   bounds: MapBounds,
   setOsmRoads: React.Dispatch<React.SetStateAction<RoadGeometry[]>>
 ) {
-  const turfBoundsPolygon = getMapBoundsPolygon(bounds);
-  const turfBoundsPolygonMercator = toMercator(turfBoundsPolygon);
-
   const elements = await fetchDataTypeGivenBounds(OsmType.ROAD, bounds).then(
     (response: OSMResponse) => response.elements
   );
