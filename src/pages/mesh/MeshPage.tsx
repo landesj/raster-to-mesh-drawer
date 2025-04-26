@@ -18,6 +18,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@radix-ui/themes";
 import { handleMeshExport } from "./meshExport";
 import { MapBounds } from "../../mapUtils";
+import { MeshBoundsState } from "../state";
+import { getLatLonFromString, getMercatorMapReferencePoint } from "./utils";
+import * as turf from "@turf/turf";
+import { toMercator } from "@turf/projection";
 
 export const canvasSize = 1000;
 export const MATERIAL = new THREE.MeshLambertMaterial({ color: "#ffffff" });
@@ -101,8 +105,30 @@ function TopBar() {
   );
 }
 
+export function mapBoundsToClippingPlanes(bounds: MapBounds): THREE.Plane[] {
+  const refPoint = getMercatorMapReferencePoint(bounds);
+  const { referencePointLat, referencePointLon } = getLatLonFromString(
+    refPoint!
+  );
+  const turfPointMin = turf.point([bounds.latMin, bounds.lonMin]);
+  const turfPointMax = turf.point([bounds.latMax, bounds.lonMax]);
+  const mercatorPointMin = toMercator(turfPointMin).geometry.coordinates;
+  const mercatorPointMax = toMercator(turfPointMax).geometry.coordinates;
+  const latMin = mercatorPointMin[0] - referencePointLat;
+  const lonMin = mercatorPointMin[1] - referencePointLon;
+  const latMax = mercatorPointMax[0] - referencePointLat;
+  const lonMax = mercatorPointMax[1] - referencePointLon;
+  return [
+    new THREE.Plane(new THREE.Vector3(0, 1, 0), -latMin),
+    new THREE.Plane(new THREE.Vector3(0, -1, 0), latMax),
+    new THREE.Plane(new THREE.Vector3(1, 0, 0), -lonMin),
+    new THREE.Plane(new THREE.Vector3(-1, 0, 0), lonMax),
+  ];
+}
+
 function MeshPage() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const meshBounds = useRecoilValue(MeshBoundsState);
 
   const pointLight = useMemo(() => {
     return new THREE.PointLight(0xffffff, 1);
@@ -145,6 +171,13 @@ function MeshPage() {
     };
     renderer.render(scene, camera);
   }, []);
+
+  useEffect(() => {
+    if (!meshBounds) return;
+    three.renderer.clippingPlanes = mapBoundsToClippingPlanes(
+      meshBounds.bounds
+    );
+  }, [meshBounds]);
 
   useEffect(() => {
     const canvas = ref.current!;
